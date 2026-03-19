@@ -1,0 +1,28 @@
+{
+    "name":  "dv-control-center",
+    "version":  "1.0.0",
+    "api_version":  "1.0.0",
+    "keywords":  [
+                     "Vision Mixer"
+                 ],
+    "manufacturer":  "DataVideo",
+    "product":  "DV Control Center",
+    "shortname":  "dvcc",
+    "main":  "index.js",
+    "scripts":  {
+                    "test":  "echo \"Error: no test specified\" \u0026\u0026 exit 1"
+                },
+    "repository":  {
+                       "type":  "git",
+                       "url":  "https://local.invalid/dv-control-center"
+                   },
+    "author":  "Rose O",
+    "license":  "MIT",
+    "bugs":  {
+                 "url":  "https://local.invalid/dv-control-center/issues"
+             },
+    "homepage":  "https://local.invalid/dv-control-center",
+    "dependencies":  {
+                         "color-convert":  "^2.0.1"
+                     }
+}

@@ -1,0 +1,30 @@
+﻿# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime logs
+logs/
+*.log
+
+# Build artifacts
+*.tmp
+*.bak
+*.bak*
+
+# .NET launcher build outputs
+datavideo-control-center/tools/tray-launcher/bin/
+datavideo-control-center/tools/tray-launcher/obj/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Keep dumps/docs in repo intentionally

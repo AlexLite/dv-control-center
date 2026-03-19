@@ -1,0 +1,320 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DataVideo Control Center</title>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header>
+    <div class="top-left">
+      <nav class="tabs">
+        <button data-tab="connect" class="active" data-i18n="tab.connect">Configuration</button>
+        <button data-tab="multiview" data-i18n="tab.multiview">Multiview</button>
+        <button data-tab="pip" data-i18n="tab.pip">P-in-P</button>
+        <button data-tab="flex" data-i18n="tab.flex">Flex</button>
+        <button data-tab="keyer" data-i18n="tab.keyer">Keyer</button>
+        <button data-tab="chroma" data-i18n="tab.chroma">Chroma</button>
+        <button data-tab="inputs" data-i18n="tab.inputs">Inputs</button>
+        <button data-tab="outputs" data-i18n="tab.outputs">Outputs</button>
+        <button data-tab="audio" data-i18n="tab.audio">Audio</button>
+        <button data-tab="files" data-i18n="tab.files">Files</button>
+        <button data-tab="setup" data-i18n="tab.setup">Setup</button>
+        <button data-tab="raw" data-i18n="tab.raw">Raw Controls</button>
+      </nav>
+    </div>
+    <div class="top-right">
+      <div id="connState" data-i18n="status.disconnected">Disconnected</div>
+      <div id="modelState">Model: n/a</div>
+      <div id="modelCapabilities"></div>
+      <div id="modelHiddenControls"></div>
+      <h1>DataVideo Control Center</h1>
+    </div>
+  </header>
+
+  <main>
+    <section id="tab-connect" class="tab active">
+      <div class="card">
+        <h2 data-i18n="connect.title">Configuration</h2>
+        <div class="connect-meta-row">
+          <label class="lang-switch" for="langSelect">
+            <span data-i18n="lang.label">Language</span>
+            <select id="langSelect">
+              <option value="en" data-i18n="lang.en">English</option>
+              <option value="ru" data-i18n="lang.ru">Russian</option>
+            </select>
+          </label>
+        </div>
+        <label><span data-i18n="connect.ipHost">IP/Host</span> <input id="host" value="192.168.1.200"></label>
+        <label><span data-i18n="connect.realtimePort">Realtime Port</span> <input id="rtPort" type="number" value="5001"></label>
+        <label><span data-i18n="connect.commandPort">Command Port</span> <input id="cmdPort" type="number" value="5002"></label>
+        <div class="row">
+          <button id="btnConnect" data-i18n="connect.btnConnect">Connect</button>
+          <button id="btnDisconnect" class="muted" data-i18n="connect.btnDisconnect">Disconnect</button>
+          <button id="btnSyncNow" class="muted" data-i18n="connect.syncNow">Sync Now</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-multiview" class="tab">
+      <div class="mini-pair-grid">
+        <div class="card">
+          <h2 data-i18n="multiview.title">Multiview Settings</h2>
+          <label><span data-i18n="multiview.mode">Mode</span> <select id="mvMode"></select></label>
+          <label><span data-i18n="multiview.main1">Main 1 Source</span> <select id="mvMain1"></select></label>
+          <label><span data-i18n="multiview.main2">Main 2 Source</span> <select id="mvMain2"></select></label>
+          <div class="inline-tools-row">
+            <label class="inline-tool checkbox-inline"><span data-i18n="multiview.transparentLabels">Transparent Labels</span> <input id="mvLabelsTransparent" type="checkbox"></label>
+            <span class="sep"></span>
+            <label class="inline-tool checkbox-inline"><span data-i18n="multiview.autoNumber">Auto Number</span> <input id="mvAutoNum" type="checkbox"></label>
+            <span class="sep"></span>
+            <label class="inline-tool checkbox-inline"><span data-i18n="multiview.labelInfo">Label Info</span> <input id="mvLabelInfo" type="checkbox"></label>
+          </div>
+          <button id="applyMv" data-i18n="multiview.apply">Apply Multiview</button>
+        </div>
+        <div class="card">
+          <h2 data-i18n="cameras.title">Camera Names</h2>
+          <div id="cameraNames" class="camera-names-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-pip" class="tab">
+      <div class="editor-layout">
+        <div class="card wide">
+          <div class="stage-16x9">
+            <canvas id="pipCanvas"></canvas>
+          </div>
+          <div class="inline-tools-row stage-inline-row stage-constrained">
+            <label class="inline-tool"><span data-i18n="editor.gridDensity">Grid Density</span> <input id="pipGridDensity" type="range" min="8" max="60" step="1" value="24"></label>
+            <label class="inline-tool checkbox-inline"><span data-i18n="editor.showGuides">Show Guide Lines</span> <input id="pipShowGuides" type="checkbox" checked></label>
+            <label class="inline-tool checkbox-inline"><span data-i18n="editor.safeMargins">Safe Margins</span> <input id="pipSafeMargins" type="checkbox"></label>
+            <label class="inline-tool checkbox-inline"><span data-i18n="editor.snapToGuides">Snap To Guides</span> <input id="pipSnapEnabled" type="checkbox" checked></label>
+            <label class="inline-tool"><span data-i18n="editor.snapDistance">Snap Distance (px)</span> <input id="pipSnapDistance" type="number" min="2" max="40" step="1" value="10"></label>
+          </div>
+          <div class="row compact-row stage-constrained">
+            <button id="addPipGuideV" class="muted">+ V |</button>
+            <button id="addPipGuideH" class="muted">+ H __</button>
+            <button id="savePipGuides" data-i18n="editor.saveGuides">Save Guides</button>
+            <button id="loadPipGuides" class="muted" data-i18n="editor.loadGuides">Load Guides</button>
+            <button id="clearPipGuides" class="muted" data-i18n="editor.clearGuides">Clear Guides</button>
+          </div>
+        </div>
+        <div class="side-stack">
+          <div class="card pip-action-card">
+            <div class="action-card-head">
+              <div class="icon-row action-corner-row">
+                <button id="pipUndo" class="muted icon-btn" data-i18n="action.undoIcon" title="Undo">↶</button>
+                <button id="pipRedo" class="muted icon-btn" data-i18n="action.redoIcon" title="Redo">↷</button>
+              </div>
+              <div class="pip-actions-inline">
+                <button id="pipMergeToggle" class="muted" data-i18n="merge.toggle">Keys Bank / Merge</button>
+                <button id="pipSaveAll" data-i18n="action.savePip">Save PIP</button>
+                <button id="pipCancelAll" class="muted" data-i18n="action.cancel">Cancel</button>
+              </div>
+            </div>
+            <div id="pipActionStatus" class="hint"></div>
+          </div>
+          <div id="pipMergePanel" class="card hidden-panel">
+            <h2 data-i18n="merge.title">Merge Engine</h2>
+            <div class="grid merge-config-grid">
+              <label><span data-i18n="merge.duration">Duration (ms)</span> <input id="pipMergeDuration" type="number" min="100" max="120000" step="100" value="1200"></label>
+              <label><span data-i18n="merge.rate">Update Rate (Hz)</span> <input id="pipMergeFps" type="number" min="2" max="50" step="1" value="25"></label>
+              <label><span data-i18n="merge.speedMode">Speed Mode</span>
+                <select id="pipMergeEasing">
+                  <option value="Linear" data-i18n="merge.linear">Linear</option>
+                  <option value="EaseEase" selected data-i18n="merge.easeEase">EaseEase</option>
+                  <option value="EaseIn" data-i18n="merge.easeIn">EaseIn</option>
+                  <option value="EaseOut" data-i18n="merge.easeOut">EaseOut</option>
+                </select>
+              </label>
+              <label><span data-i18n="merge.presetName">Preset Name</span> <input id="pipMergePresetName" placeholder="Key 1" data-i18n-placeholder="merge.presetPlaceholder"></label>
+            </div>
+            <div class="row compact-row merge-actions-row">
+              <button id="pipMergeSavePreset" data-i18n="merge.savePreset">Save Preset</button>
+              <button id="pipMergeApplyNow" class="muted" data-i18n="merge.applyNow">Apply Now</button>
+              <button id="pipMergeStop" class="muted" data-i18n="merge.stop">Stop</button>
+            </div>
+            <div id="pipMergePresetButtons" class="preset-grid"></div>
+            <div id="pipMergeStatus" class="hint" data-i18n="merge.statusHintPip">Merge Engine (uses current P-in-P editor)</div>
+          </div>
+          <div id="pipControls" class="grid side-controls"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-flex" class="tab">
+      <div class="editor-layout">
+        <div class="card wide">
+          <div class="stage-16x9">
+            <canvas id="flexCanvas"></canvas>
+          </div>
+          <div class="inline-tools-row stage-inline-row stage-constrained">
+            <label class="inline-tool"><span data-i18n="editor.gridDensity">Grid Density</span> <input id="flexGridDensity" type="range" min="8" max="60" step="1" value="24"></label>
+            <label class="inline-tool checkbox-inline"><span data-i18n="editor.showGuides">Show Guide Lines</span> <input id="flexShowGuides" type="checkbox" checked></label>
+            <label class="inline-tool checkbox-inline"><span data-i18n="editor.safeMargins">Safe Margins</span> <input id="flexSafeMargins" type="checkbox"></label>
+            <label class="inline-tool checkbox-inline"><span data-i18n="editor.snapToGuides">Snap To Guides</span> <input id="flexSnapEnabled" type="checkbox" checked></label>
+            <label class="inline-tool"><span data-i18n="editor.snapDistance">Snap Distance (px)</span> <input id="flexSnapDistance" type="number" min="2" max="40" step="1" value="10"></label>
+          </div>
+          <div class="row compact-row stage-constrained">
+            <button id="addGuideV" class="muted">+ V |</button>
+            <button id="addGuideH" class="muted">+ H __</button>
+            <button id="saveFlexGuides" data-i18n="editor.saveGuides">Save Guides</button>
+            <button id="loadFlexGuides" class="muted" data-i18n="editor.loadGuides">Load Guides</button>
+            <button id="clearGuides" class="muted" data-i18n="editor.clearGuides">Clear Guides</button>
+          </div>
+        </div>
+
+        <div class="side-stack">
+          <div class="card flex-bank-card">
+            <div class="action-card-head">
+              <div class="icon-row action-corner-row">
+                <button id="flexUndo" class="muted icon-btn" data-i18n="action.undoIcon" title="Undo">↶</button>
+                <button id="flexRedo" class="muted icon-btn" data-i18n="action.redoIcon" title="Redo">↷</button>
+              </div>
+              <div class="flex-bank-main">
+                <div class="flex-bank-switch-row">
+                  <button id="flexBank1" class="bank-btn bank-src1" data-i18n="flex.src1">Flex Src 1</button>
+                  <button id="flexBank2" class="bank-btn bank-src2" data-i18n="flex.src2">Flex Src 2</button>
+                </div>
+                <div class="flex-bank-actions">
+                  <button id="flexMergeToggle" class="muted" data-i18n="merge.toggle">Keys Bank / Merge</button>
+                  <button id="flexSaveAll" data-i18n="action.saveFlex">Save Flex</button>
+                  <button id="flexCancelAll" class="muted" data-i18n="action.cancel">Cancel</button>
+                </div>
+              </div>
+            </div>
+            <div id="flexActionStatus" class="hint"></div>
+          </div>
+          <div id="flexMergePanel" class="card hidden-panel">
+            <h2 data-i18n="merge.title">Merge Engine</h2>
+            <div class="grid merge-config-grid">
+              <label><span data-i18n="merge.duration">Duration (ms)</span> <input id="mergeDuration" type="number" min="100" max="120000" step="100" value="1200"></label>
+              <label><span data-i18n="merge.rate">Update Rate (Hz)</span> <input id="mergeFps" type="number" min="2" max="50" step="1" value="25"></label>
+              <label><span data-i18n="merge.speedMode">Speed Mode</span>
+                <select id="mergeEasing">
+                  <option value="Linear" data-i18n="merge.linear">Linear</option>
+                  <option value="EaseEase" selected data-i18n="merge.easeEase">EaseEase</option>
+                  <option value="EaseIn" data-i18n="merge.easeIn">EaseIn</option>
+                  <option value="EaseOut" data-i18n="merge.easeOut">EaseOut</option>
+                </select>
+              </label>
+              <label><span data-i18n="merge.presetName">Preset Name</span> <input id="mergePresetName" placeholder="Key 1" data-i18n-placeholder="merge.presetPlaceholder"></label>
+            </div>
+            <div class="row compact-row merge-actions-row">
+              <button id="mergeSavePreset" data-i18n="merge.savePreset">Save Preset</button>
+              <button id="mergeApplyNow" class="muted" data-i18n="merge.applyNow">Apply Now</button>
+              <button id="mergeStop" class="muted" data-i18n="merge.stop">Stop</button>
+            </div>
+            <div id="mergePresetButtons" class="preset-grid"></div>
+            <div id="mergeStatus" class="hint" data-i18n="merge.statusHint">Merge Engine (uses current Flex Src editor)</div>
+          </div>
+          <div id="flexWindowControls" class="grid side-controls"></div>
+          <div class="mini-pair-grid">
+            <div class="card">
+              <h2 data-i18n="flex.sources.title">Flex Sources</h2>
+              <div class="source-inline-row">
+                <span data-i18n="flex.sources.background">Background</span>
+                <select id="flexBg"></select>
+              </div>
+              <div class="source-inline-row">
+                <span data-i18n="flex.sources.foreground">Foreground</span>
+                <select id="flexFg"></select>
+                <label class="checkbox-inline source-enable-inline"><span data-i18n="flex.sources.fgEnable">Enable</span> <input id="flexFgEnable" type="checkbox"></label>
+              </div>
+            </div>
+            <div class="card">
+              <h2 data-i18n="memory.title">User Mem</h2>
+              <label><span data-i18n="memory.slot">Memory Slot</span> <input id="memSlot" type="number" min="1" max="999" step="1" value="1"></label>
+              <label class="inline-tool checkbox-inline compact-checkline"><span data-i18n="memory.loadAll">Load All Sections</span> <input id="memLoadAll" type="checkbox" checked></label>
+              <div class="row compact-row">
+                <button id="memSave" data-i18n="memory.save">Save Memory</button>
+                <button id="memLoad" class="muted" data-i18n="memory.load">Load Memory</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <section id="tab-keyer" class="tab">
+      <div class="card"><div id="keyerControls" class="menu-grid"></div></div>
+    </section>
+
+    <section id="tab-chroma" class="tab">
+      <div class="card"><div id="chromaControls" class="menu-grid"></div></div>
+    </section>
+
+    <section id="tab-inputs" class="tab">
+      <div class="card"><h2 data-i18n="inputs.title">Inputs</h2><div id="inputsControls" class="menu-grid"></div></div>
+    </section>
+
+    <section id="tab-outputs" class="tab">
+      <div class="card"><h2 data-i18n="outputs.title">Outputs</h2><div id="outputsControls" class="menu-grid"></div></div>
+    </section>
+
+    <section id="tab-audio" class="tab">
+      <div class="card"><h2 data-i18n="audio.title">Audio</h2><div id="audioControls" class="menu-grid"></div></div>
+    </section>
+
+    <section id="tab-files" class="tab">
+      <div class="card"><h2 data-i18n="files.title">Files</h2><div id="filesControls" class="menu-grid"></div></div>
+    </section>
+
+    <section id="tab-setup" class="tab">
+      <div class="card"><h2 data-i18n="setup.title">Setup</h2><div id="setupControls" class="menu-grid"></div></div>
+    </section>    <section id="tab-raw" class="tab">
+      <div class="card">
+        <h2 data-i18n="raw.title">All Controls</h2>
+        <input id="rawSearch" placeholder="Filter by label: FLEX, PINP, MULTIVIEW" data-i18n-placeholder="raw.filterPlaceholder">
+        <div id="rawControls"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="./canvas-geometry.js"></script>
+  <script src="./ui-geometry.js"></script>
+  <script src="./language/translations.js"></script>
+  <script src="./language/i18n.js"></script>
+  <script src="./constants.js"></script>
+  <script src="./app-state.js"></script>
+  <script src="./api-client.js"></script>
+  <script src="./ui-core.js"></script>
+  <script src="./mapping-dvip.js"></script>
+  <script src="./transport-api.js"></script>
+  <script src="./model-capabilities-ui.js"></script>
+  <script src="./app-shell.js"></script>
+  <script src="./panels-ui.js"></script>
+  <script src="./state-sync-ui.js"></script>
+  <script src="./editor-state.js"></script>
+  <script src="./editor-persistence.js"></script>
+  <script src="./editor-ui-utils.js"></script>
+  <script src="./runtime-helpers.js"></script>
+  <script src="./controls-ui.js"></script>
+  <script src="./control-actions.js"></script>
+  <script src="./app-bootstrap.js"></script>
+  <script src="./pip-renderer.js"></script>
+  <script src="./flex-renderer.js"></script>
+  <script src="./pip-editor.js"></script>
+  <script src="./flex-editor.js"></script>
+  <script src="./namespace-alias.js"></script>
+  <script src="./app.js"></script>
+  <script src="./merge-engine-ui.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

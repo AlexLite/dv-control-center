@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Syntax check
+        run: |
+          node --check public/app.js
+          node --check public/constants.js
+          node --check public/ui-core.js
+          node --check public/mapping-se3200.js
+          node --check public/transport-api.js
+          node --check public/editor-state.js
+          node --check public/editor-persistence.js
+          node --check public/controls-ui.js
+          node --check public/control-actions.js
+          node --check public/app-bootstrap.js
+
+      - name: Run tests
+        run: npm test

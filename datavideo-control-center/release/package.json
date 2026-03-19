@@ -1,0 +1,20 @@
+﻿{
+    "name":  "datavideo-control-center",
+    "version":  "0.1.0",
+    "private":  true,
+    "description":  "Datavideo DVIP control center with web UI",
+    "main":  "server.js",
+    "scripts":  {
+                    "start":  "node server.js",
+                    "generate:register-map":  "node tools/generate-register-map.js",
+                    "check:protocol":  "node tools/protocol-check.js",
+                    "test:merge-scale":  "node test/merge-scale.test.js",
+                    "test:mapping":  "node test/mapping-contract.test.js",
+                    "test:flex-subsection":  "node test/flex-subsection.test.js",
+                    "test:smoke-api":  "node test/smoke-merge-api.test.js",
+                    "test:geometry":  "node test/calibration-geometry.test.js",
+                    "test":  "node test/merge-scale.test.js \u0026\u0026 node test/mapping-contract.test.js \u0026\u0026 node test/mapping-legacy-shim.test.js \u0026\u0026 node test/flex-subsection.test.js \u0026\u0026 node test/server-composition.test.js \u0026\u0026 node test/smoke-merge-api.test.js \u0026\u0026 node test/calibration-geometry.test.js \u0026\u0026 node test/panels-menu-tabs.test.js \u0026\u0026 node test/menu-tabs-model-smoke.test.js \u0026\u0026 node test/model-capabilities-tabs.test.js \u0026\u0026 node test/runtime-model-state.test.js \u0026\u0026 node test/ui-core-tabs.test.js \u0026\u0026 node test/translations-model-keys.test.js \u0026\u0026 node test/model-enum-source.test.js \u0026\u0026 node test/manual-binary-enums.test.js \u0026\u0026 node test/model-specific-source-choices.test.js \u0026\u0026 node test/model-specific-wipe-pattern.test.js \u0026\u0026 node test/choices-release-filter.test.js \u0026\u0026 node test/flag-default-enum-fill.test.js \u0026\u0026 node test/flag-enum-coverage.test.js \u0026\u0026 node test/no-release-labels-in-catalog-enums.test.js \u0026\u0026 node test/int-boolean-enum-coverage.test.js \u0026\u0026 node test/bylabel-enum-source-coverage.test.js \u0026\u0026 node test/enum-source-alignment.test.js \u0026\u0026 node test/enum-ids-unique-per-control.test.js \u0026\u0026 node test/model-matrix-enum-sources.test.js \u0026\u0026 node test/catalog-enum-source-route.test.js \u0026\u0026 node test/model-matrix-doc-enum-source.test.js \u0026\u0026 node test/register-map-enum-source.test.js \u0026\u0026 node test/register-map-generated-file.test.js \u0026\u0026 node test/enum-source-domain.test.js \u0026\u0026 node test/model-docs-generation-consistency.test.js",
+                    "test:mapping-legacy-shim":  "node test/mapping-legacy-shim.test.js",
+                    "test:server-composition":  "node test/server-composition.test.js"
+                }
+}
