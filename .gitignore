@@ -28,3 +28,7 @@ __pycache__/
 *.pyc
 
 # Keep dumps/docs in repo intentionally
+
+# Keep runtime binaries only in release/
+datavideo-control-center/*.exe
+datavideo-control-center/launcher/*.exe
