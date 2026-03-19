@@ -1,0 +1,48 @@
+﻿name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  dvcc:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: datavideo-control-center
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Run tests
+        run: npm test
+
+  companion-module:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Syntax check custom module
+        run: |
+          node --check "companion-module-dv-control-center/index.js"
+          node --check "companion-module-dv-control-center/actions.js"
+          node --check "companion-module-dv-control-center/feedbacks.js"
+          node --check "companion-module-dv-control-center/presets.js"
+

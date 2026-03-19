@@ -169,3 +169,8 @@ DataVideo Control Center/
 - `companion-module-datavideo-dvip-master` — базовый/справочный upstream
 
 Если нужно убрать путаницу, можно оставить только рабочую ветку и перенести upstream в архив.
+
+## Release layout
+
+- `release/DV Control Center` — current runtime package
+- `archive/dv-control-center-0.5` — legacy module release snapshot
