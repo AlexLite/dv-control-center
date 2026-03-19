@@ -1,39 +1,41 @@
+﻿[English version](./README.en.md)
+
 # DataVideo Control Center
 
-��������� web-��������� ��� ������������ ���������� DataVideo SE-3200 ����� DVIP.
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ web-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ DataVideo SE-3200 пїЅпїЅпїЅпїЅпїЅ DVIP.
 
-## ��� ���� � UI
+## пїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ UI
 
-- ����������� � ������ (command/realtime)
-- ��������� ������������ ������ � ����� (`Model: ...`)
-- ������ `Sync Now` (on-demand refresh ��������� � ������)
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (command/realtime)
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ (`Model: ...`)
+- пїЅпїЅпїЅпїЅпїЅпїЅ `Sync Now` (on-demand refresh пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ)
 - MultiView
-- ����� �����
+- пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
 - Pip Studio
 - Flex Studio
 - Merge Engine
 - Raw Controls
-- Keyer/Chroma/Inputs/Outputs/Audio/Files/Setup: ���������� �� �������� HS-3200 (��� menu-��������, ����� ���, ��� ��� �������� � ��������� ������ PiP/Flex/Multiview)
-- Inputs/Outputs/Audio/Files/Setup ������� �� ���������� ��������� ��� �������� ������� � ����������
+- Keyer/Chroma/Inputs/Outputs/Audio/Files/Setup: пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ HS-3200 (пїЅпїЅпїЅ menu-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ PiP/Flex/Multiview)
+- Inputs/Outputs/Audio/Files/Setup пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-## ������
+## пїЅпїЅпїЅпїЅпїЅпїЅ
 
 ```bash
 cd datavideo-control-center
 node server.js
 ```
 
-�� ��������� UI �������� �� `http://localhost:9999`.
+пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ `http://localhost:9999`.
 
-## ������������� Model Mapping (���� 1)
+## пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Model Mapping (пїЅпїЅпїЅпїЅ 1)
 
-�������� ������� ������ ������� � ����� �������� ������ �� ������ ����� env:
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ env:
 
-- `DV_MODEL=auto` (�������������, ��������������� ����� �����������; ������� � ������ hybrid)
+- `DV_MODEL=auto` (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ; пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ hybrid)
 - `DV_MODEL=se3200` (fixed, hybrid: `protocol_3200 + protocol_common`)
 - `DV_MODEL=se2200|se1200mu|se700|se650` (common: `protocol_common`)
 
-������ �������:
+пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
 
 ```bash
 DV_MODEL=auto node server.js
@@ -41,53 +43,53 @@ DV_MODEL=auto node server.js
 
 API:
 
-- `GET /api/models` � ������� ������ � ������ ���������.
-- `GET /api/catalog` � ���������� `model` � `modelSelection`.
-- `POST /api/model/detect` � ����������� ��������� ���������������.
-- `GET /api/state` � ���������� `model` � `modelSelection`.
+- `GET /api/models` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+- `GET /api/catalog` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `model` пїЅ `modelSelection`.
+- `POST /api/model/detect` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+- `GET /api/state` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `model` пїЅ `modelSelection`.
 
 Frontend namespace:
 
-- ����� ������� namespace: `DVIP*`.
-- ��� �������� ������������� ��������� alias `SE3200*` ����� `public/namespace-alias.js`.
+- пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ namespace: `DVIP*`.
+- пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ alias `SE3200*` пїЅпїЅпїЅпїЅпїЅ `public/namespace-alias.js`.
 
-### UI Model Capabilities (�������������)
+### UI Model Capabilities (пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ)
 
-������ capability-gating � UI �������� � `public/model-capabilities-ui.js`:
+пїЅпїЅпїЅпїЅпїЅпїЅ capability-gating пїЅ UI пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/model-capabilities-ui.js`:
 
-- ������ ����� ������� `supports` (`state.modelSelection.detected.supports` / `state.model.supports`).
-- ���������� ���������� ������� � ��������� ������ UI �� ������������ ������.
-- ���������� Raw Controls �� model capabilities.
-- `app-shell.js` ���������� ���������� capability-������ � ���� ������ (� fallback).
-����������: ������� UI ��-�������� ������������ �� SE-3200 extended-���� (Flex Studio / ����������� PiP). ��� ������ ������� ��� backend-ready ���� ��������, UI-��������� ����� ��������� ������.
+- пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ `supports` (`state.modelSelection.detected.supports` / `state.model.supports`).
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ UI пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Raw Controls пїЅпїЅ model capabilities.
+- `app-shell.js` пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ capability-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ (пїЅ fallback).
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ: пїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI пїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ SE-3200 extended-пїЅпїЅпїЅпїЅ (Flex Studio / пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ PiP). пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ backend-ready пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, UI-пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.
 
-## �����
+## пїЅпїЅпїЅпїЅпїЅ
 
 ```bash
 npm test
 ```
 
-�������� ���������� ��������:
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
 
-- `npm run generate:register-map` � ������������� ������ ����� ��������� � `data/register-map.full.json` �� `protocol_3200 + protocol_common`.
-- `npm run test:merge-scale` � interpolation scale ��� merge engine.
-- `npm run test:mapping` � ����������� �������� mapping � `% <-> raw`.
-- `npm run test:flex-subsection` � �������� ������ `subSection` ��� Flex Src 1/2.
-- `npm run test:smoke-api` � �������������� smoke merge API (save/list/run/delete presets).
-- `npm run test:server-composition` � smoke �������� server composition (bootstrap/routes/client/http utils).
-- `npm run test:geometry` � �������� ��������� � round-trip ��� canvas geometry (PIP/Flex).
-- `npm run check:protocol` � ������� ��� �������� label/id �� `protocol_3200.js` (GitHub/Bitfocus �����).
+- `npm run generate:register-map` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `data/register-map.full.json` пїЅпїЅ `protocol_3200 + protocol_common`.
+- `npm run test:merge-scale` пїЅ interpolation scale пїЅпїЅпїЅ merge engine.
+- `npm run test:mapping` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ mapping пїЅ `% <-> raw`.
+- `npm run test:flex-subsection` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ `subSection` пїЅпїЅпїЅ Flex Src 1/2.
+- `npm run test:smoke-api` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ smoke merge API (save/list/run/delete presets).
+- `npm run test:server-composition` пїЅ smoke пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ server composition (bootstrap/routes/client/http utils).
+- `npm run test:geometry` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ round-trip пїЅпїЅпїЅ canvas geometry (PIP/Flex).
+- `npm run check:protocol` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ label/id пїЅпїЅ `protocol_3200.js` (GitHub/Bitfocus пїЅпїЅпїЅпїЅпїЅ).
 
 ## CI
 
-�������� GitHub Actions workflow:
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ GitHub Actions workflow:
 
 - `.github/workflows/ci.yml`
-- ��������� `node --check` ��� �������� frontend ������� � `npm test`.
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `node --check` пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ frontend пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `npm test`.
 
 ## API
 
-������� endpoint'�:
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅ endpoint'пїЅ:
 
 - `POST /api/connect`
 - `POST /api/disconnect`
@@ -100,7 +102,7 @@ npm test
 - `GET /api/state`
 - `GET /api/events` (SSE)
 
-Merge Engine endpoint'�:
+Merge Engine endpoint'пїЅ:
 
 - `GET /api/merge/state`
 - `GET /api/merge/presets`
@@ -110,9 +112,9 @@ Merge Engine endpoint'�:
 - `POST /api/merge/run`
 - `POST /api/merge/stop`
 
-## Merge Engine (��� Companion)
+## Merge Engine (пїЅпїЅпїЅ Companion)
 
-������ ������� �������� � �������:
+пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
 
 ```http
 POST /api/merge/run
@@ -126,42 +128,42 @@ Content-Type: application/json
 }
 ```
 
-��� `easing`: `Linear`, `EaseEase`, `EaseIn`, `EaseOut`.
+пїЅпїЅпїЅ `easing`: `Linear`, `EaseEase`, `EaseIn`, `EaseOut`.
 
-## ������������
+## пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-- Backend merge-������ �������� � `lib/merge-engine.js`.
-- DVIP transport client ������� � `lib/dvip-client.js`.
-- DVIP packet codec/helpers �������� � `lib/protocol-codec.js`.
-- HTTP helpers (`json`/`readBody`) �������� � `lib/http-utils.js`.
-- Backend model/catalog bootstrap ������� � `lib/bootstrap/model-bootstrap.js`.
-- Frontend merge-������ �������� � `public/merge-engine-ui.js`.
-- ����� ��������������/ui ������� �������� � `public/ui-geometry.js`.
-- ����� ��������� UI/mapping �������� � `public/constants.js`.
-- Core UI helpers (menus/select/canvas sync) �������� � `public/ui-core.js`.
-- ������� ��������� �������� � `public/app-state.js`.
-- API/SSE ������ ������� � `public/api-client.js`.
-- Mapping/ID/convert helpers �������� � `public/mapping-dvip.js`.
-- Legacy `public/mapping-se3200.js` �������� ��� compatibility shim �� `public/mapping-dvip.js`.
-- Transport API (`sendControl`/`sendRawControl`) ������� � `public/transport-api.js`.
-- Model capability-gating ������� � `public/model-capabilities-ui.js`.
-- App shell/wiring (tabs, hotkeys, connection/events) ������� � `public/app-shell.js`.
-- Bootstrap � init sequence �������� � `public/app-bootstrap.js`.
-- State->UI sync ������� � `public/state-sync-ui.js`.
-- Editor session state (capture/restore/history/hooks) ������� � `public/editor-state.js`.
-- Editor persistence (localStorage/guides json IO) ������� � `public/editor-persistence.js`.
-- Editor UI utils (bind/normalize/set-window-inputs) ������� � `public/editor-ui-utils.js`.
-- Runtime helpers (connection state/locks/default windows/canvas converters) �������� � `public/runtime-helpers.js`.
-- Base canvas geometry (������� ��������� ��� PIP/Flex) �������� � `public/canvas-geometry.js`.
-- Pip/Flex controls cards �������� � `public/controls-ui.js`.
-- Actions (apply/save/banks) �������� � `public/control-actions.js`.
-- Pip mouse/editor ������ �������� � `public/pip-editor.js`.
-- Flex mouse/editor ������ �������� � `public/flex-editor.js`.
-- Pip/Flex renderer �������� � `public/pip-renderer.js` � `public/flex-renderer.js`.
+- Backend merge-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `lib/merge-engine.js`.
+- DVIP transport client пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `lib/dvip-client.js`.
+- DVIP packet codec/helpers пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `lib/protocol-codec.js`.
+- HTTP helpers (`json`/`readBody`) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `lib/http-utils.js`.
+- Backend model/catalog bootstrap пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `lib/bootstrap/model-bootstrap.js`.
+- Frontend merge-пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/merge-engine-ui.js`.
+- пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ/ui пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/ui-geometry.js`.
+- пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ UI/mapping пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/constants.js`.
+- Core UI helpers (menus/select/canvas sync) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/ui-core.js`.
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/app-state.js`.
+- API/SSE пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/api-client.js`.
+- Mapping/ID/convert helpers пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/mapping-dvip.js`.
+- Legacy `public/mapping-se3200.js` пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ compatibility shim пїЅпїЅ `public/mapping-dvip.js`.
+- Transport API (`sendControl`/`sendRawControl`) пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/transport-api.js`.
+- Model capability-gating пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/model-capabilities-ui.js`.
+- App shell/wiring (tabs, hotkeys, connection/events) пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/app-shell.js`.
+- Bootstrap пїЅ init sequence пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/app-bootstrap.js`.
+- State->UI sync пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/state-sync-ui.js`.
+- Editor session state (capture/restore/history/hooks) пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/editor-state.js`.
+- Editor persistence (localStorage/guides json IO) пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/editor-persistence.js`.
+- Editor UI utils (bind/normalize/set-window-inputs) пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/editor-ui-utils.js`.
+- Runtime helpers (connection state/locks/default windows/canvas converters) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/runtime-helpers.js`.
+- Base canvas geometry (пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ PIP/Flex) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/canvas-geometry.js`.
+- Pip/Flex controls cards пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/controls-ui.js`.
+- Actions (apply/save/banks) пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/control-actions.js`.
+- Pip mouse/editor пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/pip-editor.js`.
+- Flex mouse/editor пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/flex-editor.js`.
+- Pip/Flex renderer пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ `public/pip-renderer.js` пїЅ `public/flex-renderer.js`.
 
-### ������� �������� frontend �������
+### пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ frontend пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
-`index.html` ���������� ������ �� `app.js` � ��������� �������:
+`index.html` пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ `app.js` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
 
 1. `canvas-geometry.js`
 2. `ui-geometry.js`
@@ -194,20 +196,21 @@ Content-Type: application/json
 
 ## Smoke Check (UI)
 
-����������� ������ ��� ����� ���������:
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ:
 
-1. ������� `Pip Studio`, ������� `PIP 1`, �������� `Scale`, ������ `Save PIP`.
-2. ���������, ��� ����� � �������� �������� `Scale` ���������� ������������.
-3. ������� `Flex Studio`, ��� `Flex Src 1` ��������� `Scale 100`, ��������� Key (`Save Preset` � Merge).
-4. ��� `Flex Src 1` ��������� `Scale 75`, ��������� ������ Key.
-5. ��������� `Run` ����� key � ���������, ��� ����������� ������ `Scale`, � �� ������ `X/Y`.
-6. ����������� `Flex Src 1/2` � ���������, ��� ��������� �� �����������.
+1. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Pip Studio`, пїЅпїЅпїЅпїЅпїЅпїЅпїЅ `PIP 1`, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Scale`, пїЅпїЅпїЅпїЅпїЅпїЅ `Save PIP`.
+2. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Scale` пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+3. пїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Flex Studio`, пїЅпїЅпїЅ `Flex Src 1` пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Scale 100`, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ Key (`Save Preset` пїЅ Merge).
+4. пїЅпїЅпїЅ `Flex Src 1` пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Scale 75`, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ Key.
+5. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Run` пїЅпїЅпїЅпїЅпїЅ key пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ `Scale`, пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ `X/Y`.
+6. пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ `Flex Src 1/2` пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 
-��������� �������� ��� Merge Scale: `docs/SMOKE_MERGE_UI.md`.
+пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ Merge Scale: `docs/SMOKE_MERGE_UI.md`.
 
-## �����
+## пїЅпїЅпїЅпїЅпїЅ
 
-- ����������� ����� � ������ ����� ����: `docs/TECH_AUDIT.md`.
+- пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ: `docs/TECH_AUDIT.md`.
+
 
 
 

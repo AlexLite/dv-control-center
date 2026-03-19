@@ -1,3 +1,5 @@
+﻿[English version](./README.en.md)
+
 ## Companion DV Control Center Module
 
 This is a separate custom module build for Companion.
@@ -144,3 +146,4 @@ This Companion module is aligned with `datavideo-control-center` in `DataVideo C
 - Extended geometry editing (X/Y/Scale/Crop) is handled in Control Center UI and can be triggered from Companion via API/actions.
 
 If the detected model does not support a feature (for example Flex or Multiview), related controls should be hidden/disabled.
+
