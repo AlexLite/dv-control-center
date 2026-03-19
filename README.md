@@ -160,6 +160,16 @@ DataVideo Control Center/
 
 - Базовый модуль Datavideo DVIP основан на экосистеме Bitfocus Companion.
 - В репозитории есть кастомные доработки для DV Control Center и Merge API.
+- Upstream-репозиторий базового модуля: https://github.com/bitfocus/companion-module-datavideo-dvip
+
+## Credits / Upstream
+
+Этот проект включает кастомный Companion-модуль, производный от Bitfocus Datavideo DVIP module:
+
+- Upstream: https://github.com/bitfocus/companion-module-datavideo-dvip
+- Авторство исходного модуля и вклад контрибьюторов принадлежат проекту Bitfocus.
+- Наш `companion-module-dv-control-center` расширяет upstream-интеграцией с DV Control Center (merge API/actions/feedback) при сохранении совместимости с базовым DVIP-поведением.
+- Дополнительно см. `THIRD_PARTY_NOTICES.md`
 
 ---
 
@@ -174,3 +184,4 @@ DataVideo Control Center/
 
 - `release/DV Control Center` — current runtime package
 - `archive/dv-control-center-0.5` — legacy module release snapshot
+
