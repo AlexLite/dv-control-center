@@ -45,11 +45,18 @@ async function handleControlApiRoute(ctx) {
   }
 
   if (req.method === 'POST' && pathname === '/api/control/batch') {
+    const MAX_BATCH = 50;
     const body = await readBody(req);
-    const updates = Array.isArray(body.updates) ? body.updates : [];
-    for (const item of updates) {
-      const control = catalog.byLabel.get(item.label);
-      if (control) client.sendSet(control, item.value);
+    const updates = Array.isArray(body.updates) ? body.updates.slice(0, MAX_BATCH) : [];
+    const socket = client.cmdSocket;
+    if (socket) socket.cork();
+    try {
+      for (const item of updates) {
+        const control = catalog.byLabel.get(item.label);
+        if (control) client.sendSet(control, item.value);
+      }
+    } finally {
+      if (socket) process.nextTick(() => { try { socket.uncork(); } catch (_) {} });
     }
     json(res, 200, { ok: true, count: updates.length });
     return true;
@@ -80,6 +87,28 @@ async function handleControlApiRoute(ctx) {
     return true;
   }
 
+
+
+  if (req.method === 'POST' && pathname === '/api/file-name/get') {
+    const body = await readBody(req);
+    client.requestFileName(body.kind, body.num);
+    json(res, 200, { ok: true });
+    return true;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/file-name') {
+    const body = await readBody(req);
+    client.setFileName(body.kind, body.num, body.name || '');
+    json(res, 200, { ok: true });
+    return true;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/file-name/get-range') {
+    const body = await readBody(req);
+    client.requestFileNamesRange(body.kind, body.start, body.count);
+    json(res, 200, { ok: true });
+    return true;
+  }
   return false;
 }
 

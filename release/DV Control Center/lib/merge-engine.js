@@ -160,6 +160,12 @@ class MergeEngine {
       pip: this.createModeState('pip'),
     }
 
+    // Stop all running animations when the device disconnects
+    this.client.on('disconnected', () => {
+      this.stop('flex')
+      this.stop('pip')
+    })
+
     Object.defineProperty(this, 'presets', {
       enumerable: true,
       configurable: true,
@@ -312,6 +318,19 @@ class MergeEngine {
 
   applyWindows(mode, state, prevState = null, force = false) {
     const kind = modeKey(mode)
+    const socket = this.client.cmdSocket
+
+    // Cork the socket to batch all commands of this tick into a single TCP write
+    if (socket) socket.cork()
+    try {
+      this._applyWindowsInner(kind, state, prevState, force)
+    } finally {
+      if (socket) process.nextTick(() => { try { socket.uncork() } catch (_) { /* socket may be destroyed */ } })
+    }
+  }
+
+  _applyWindowsInner(kind, state, prevState, force) {
+    const TH = 0.005 // diff threshold — avoids flooding device with micro-changes
 
     if (kind === 'flex') {
       const bank = Number(state?.bank) === 2 ? 2 : 1
@@ -322,13 +341,13 @@ class MergeEngine {
         const prev = sameBank ? prevState?.windows?.[i - 1] : null
 
         if (force || !prev || prev.en !== cur.en) this.sendRaw('flex', this.flexControlId(i, 'en'), 'flag', cur.en ? 1 : 0, bank)
-        if (force || !prev || Math.abs(prev.x - cur.x) > 0.0001) this.sendRaw('flex', this.flexControlId(i, 'x'), 'float', cur.x, bank)
-        if (force || !prev || Math.abs(prev.y - cur.y) > 0.0001) this.sendRaw('flex', this.flexControlId(i, 'y'), 'float', cur.y, bank)
-        if (force || !prev || Math.abs(prev.cl - cur.cl) > 0.0001) this.sendRaw('flex', this.flexControlId(i, 'cl'), 'float', cur.cl, bank)
-        if (force || !prev || Math.abs(prev.cr - cur.cr) > 0.0001) this.sendRaw('flex', this.flexControlId(i, 'cr'), 'float', cur.cr, bank)
-        if (force || !prev || Math.abs(prev.ct - cur.ct) > 0.0001) this.sendRaw('flex', this.flexControlId(i, 'ct'), 'float', cur.ct, bank)
-        if (force || !prev || Math.abs(prev.cb - cur.cb) > 0.0001) this.sendRaw('flex', this.flexControlId(i, 'cb'), 'float', cur.cb, bank)
-        if (force || !prev || Math.abs(prev.s - cur.s) > 0.0001) {
+        if (force || !prev || Math.abs(prev.x - cur.x) > TH) this.sendRaw('flex', this.flexControlId(i, 'x'), 'float', cur.x, bank)
+        if (force || !prev || Math.abs(prev.y - cur.y) > TH) this.sendRaw('flex', this.flexControlId(i, 'y'), 'float', cur.y, bank)
+        if (force || !prev || Math.abs(prev.cl - cur.cl) > TH) this.sendRaw('flex', this.flexControlId(i, 'cl'), 'float', cur.cl, bank)
+        if (force || !prev || Math.abs(prev.cr - cur.cr) > TH) this.sendRaw('flex', this.flexControlId(i, 'cr'), 'float', cur.cr, bank)
+        if (force || !prev || Math.abs(prev.ct - cur.ct) > TH) this.sendRaw('flex', this.flexControlId(i, 'ct'), 'float', cur.ct, bank)
+        if (force || !prev || Math.abs(prev.cb - cur.cb) > TH) this.sendRaw('flex', this.flexControlId(i, 'cb'), 'float', cur.cb, bank)
+        if (force || !prev || Math.abs(prev.s - cur.s) > TH) {
           this.sendRaw('flex', this.flexControlId(i, 'w'), 'float', cur.s, bank)
           this.sendRaw('flex', this.flexControlId(i, 'h'), 'float', cur.s, bank)
         }
@@ -341,22 +360,22 @@ class MergeEngine {
       const prev = prevState?.windows?.[i - 1]
 
       if (force || !prev || prev.en !== cur.en) this.sendRaw('pip', this.pipControlId(i, 'en'), 'flag', cur.en ? 1 : 0)
-      if (force || !prev || Math.abs(prev.x - cur.x) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'x'), 'float', cur.x)
-      if (force || !prev || Math.abs(prev.y - cur.y) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'y'), 'float', cur.y)
-      if (force || !prev || Math.abs(prev.cl - cur.cl) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'cl'), 'float', cur.cl)
-      if (force || !prev || Math.abs(prev.cr - cur.cr) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'cr'), 'float', cur.cr)
-      if (force || !prev || Math.abs(prev.ct - cur.ct) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'ct'), 'float', cur.ct)
-      if (force || !prev || Math.abs(prev.cb - cur.cb) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'cb'), 'float', cur.cb)
-      if (force || !prev || Math.abs(prev.s - cur.s) > 0.0001) {
+      if (force || !prev || Math.abs(prev.x - cur.x) > TH) this.sendRaw('pip', this.pipControlId(i, 'x'), 'float', cur.x)
+      if (force || !prev || Math.abs(prev.y - cur.y) > TH) this.sendRaw('pip', this.pipControlId(i, 'y'), 'float', cur.y)
+      if (force || !prev || Math.abs(prev.cl - cur.cl) > TH) this.sendRaw('pip', this.pipControlId(i, 'cl'), 'float', cur.cl)
+      if (force || !prev || Math.abs(prev.cr - cur.cr) > TH) this.sendRaw('pip', this.pipControlId(i, 'cr'), 'float', cur.cr)
+      if (force || !prev || Math.abs(prev.ct - cur.ct) > TH) this.sendRaw('pip', this.pipControlId(i, 'ct'), 'float', cur.ct)
+      if (force || !prev || Math.abs(prev.cb - cur.cb) > TH) this.sendRaw('pip', this.pipControlId(i, 'cb'), 'float', cur.cb)
+      if (force || !prev || Math.abs(prev.s - cur.s) > TH) {
         this.sendRaw('pip', this.pipControlId(i, 'w'), 'float', cur.s)
         this.sendRaw('pip', this.pipControlId(i, 'h'), 'float', cur.s)
       }
-      if (force || !prev || Math.abs(prev.bs - cur.bs) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'bs'), 'int', cur.bs)
-      if (force || !prev || Math.abs(prev.bo - cur.bo) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'bo'), 'float', cur.bo)
-      if (force || !prev || Math.abs(prev.bw - cur.bw) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'bw'), 'float', cur.bw)
-      if (force || !prev || Math.abs(prev.bh - cur.bh) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'bh'), 'float', cur.bh)
-      if (force || !prev || Math.abs(prev.bsa - cur.bsa) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'bsa'), 'float', cur.bsa)
-      if (force || !prev || Math.abs(prev.bl - cur.bl) > 0.0001) this.sendRaw('pip', this.pipControlId(i, 'bl'), 'float', cur.bl)
+      if (force || !prev || Math.abs(prev.bs - cur.bs) > TH) this.sendRaw('pip', this.pipControlId(i, 'bs'), 'int', cur.bs)
+      if (force || !prev || Math.abs(prev.bo - cur.bo) > TH) this.sendRaw('pip', this.pipControlId(i, 'bo'), 'float', cur.bo)
+      if (force || !prev || Math.abs(prev.bw - cur.bw) > TH) this.sendRaw('pip', this.pipControlId(i, 'bw'), 'float', cur.bw)
+      if (force || !prev || Math.abs(prev.bh - cur.bh) > TH) this.sendRaw('pip', this.pipControlId(i, 'bh'), 'float', cur.bh)
+      if (force || !prev || Math.abs(prev.bsa - cur.bsa) > TH) this.sendRaw('pip', this.pipControlId(i, 'bsa'), 'float', cur.bsa)
+      if (force || !prev || Math.abs(prev.bl - cur.bl) > TH) this.sendRaw('pip', this.pipControlId(i, 'bl'), 'float', cur.bl)
     }
   }
 
@@ -435,7 +454,7 @@ class MergeEngine {
     const ctx = this.ctx(kind)
     const target = normalizeState(inputTarget, kind)
     const durationMs = clamp(Number(opts.durationMs || 1200), 50, 120000)
-    const fps = clamp(Number(opts.fps || 25), 2, 50)
+    const fps = clamp(Number(opts.fps || 25), 25, 50)
     const easing = ['Linear', 'EaseEase', 'EaseIn', 'EaseOut'].includes(opts.easing) ? opts.easing : 'EaseEase'
 
     this.stop(kind)
@@ -444,7 +463,10 @@ class MergeEngine {
     const stepMs = Math.max(20, Math.round(1000 / fps))
     const start = Date.now()
 
-    this.applySources(kind, target, true, from)
+    // Diff-only source write on run start: only send what really changes.
+    this.applySources(kind, target, false, from)
+    // Ensure first merge tick is compared to current state, not stale previous run tick.
+    ctx.lastTickState = from
 
     const tick = () => {
       if (!ctx.running || ctx.running.cancelled) return
@@ -469,8 +491,12 @@ class MergeEngine {
         this.applyWindows(kind, state, ctx.lastTickState, isFinal)
         ctx.lastTickState = state
         ctx.currentState = state
-      } catch (_) {
+      } catch (err) {
         this.stop(kind)
+        this.client.broadcast({
+          type: 'merge-error',
+          data: { kind, error: err.message, presetName: ctx.running?.presetName || null },
+        })
         return
       }
 

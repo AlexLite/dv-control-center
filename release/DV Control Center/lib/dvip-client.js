@@ -2,6 +2,8 @@ const fs = require('fs');
 const net = require('net');
 const path = require('path');
 
+const EventEmitter = require('events');
+
 const {
   encodeControlHeader,
   encodeValue,
@@ -10,8 +12,9 @@ const {
   withPacketSize,
 } = require('./protocol-codec');
 
-class DvipClient {
+class DvipClient extends EventEmitter {
   constructor(catalog, hooks = {}, options = {}) {
+    super();
     this.catalog = catalog;
     this.hooks = hooks || {};
     this.state = {};
@@ -25,11 +28,14 @@ class DvipClient {
     this.filterPacket = Buffer.from([0x08, 0x00, 0x00, 0x00, 0x30, 0x4e, 0x13, 0x00]);
     this.cmdRx = Buffer.alloc(0);
     this.rtRx = Buffer.alloc(0);
+    this.writeQueue = [];
+    this.writeDraining = false;
     const dataDir = options.dataDir || path.join(process.cwd(), 'data');
     this.stateCachePath = path.join(dataDir, 'state-cache.json');
     this.connectionConfigPath = path.join(dataDir, 'connection-config.json');
     this.persistTimer = null;
     this.pendingInputNameRequests = [];
+    this.pendingFileNameRequests = [];
     this.sseHeartbeatTimer = null;
     this.sseHeartbeatMs = 15000;
     this.savedConnectionConfig = this.loadConnectionConfig();
@@ -70,10 +76,17 @@ class DvipClient {
     });
 
     this.cmdSocket.on('data', (buf) => this.handleSocketData('cmd', buf));
-    this.cmdSocket.on('error', (err) => this.broadcast({ type: 'error', data: err.message }));
+    this.cmdSocket.on('error', (err) => {
+      this.writeQueue = [];
+      this.writeDraining = false;
+      this.broadcast({ type: 'error', data: err.message });
+    });
     this.cmdSocket.on('close', () => {
       this.connection.connected = false;
+      this.writeQueue = [];
+      this.writeDraining = false;
       this.broadcast({ type: 'connection', data: this.connection });
+      this.emit('disconnected');
     });
 
     this.rtSocket = net.createConnection({ host, port: realtimePort }, () => {
@@ -93,7 +106,10 @@ class DvipClient {
     this.rtSocket = null;
     this.cmdRx = Buffer.alloc(0);
     this.rtRx = Buffer.alloc(0);
+    this.writeQueue = [];
+    this.writeDraining = false;
     this.pendingInputNameRequests = [];
+    this.pendingFileNameRequests = [];
     this.connection.connected = false;
     this.stopSseHeartbeat();
   }
@@ -199,6 +215,7 @@ class DvipClient {
       return;
     }
     if (socketKind === 'cmd' && this.tryHandleInputNamePacket(packet)) return;
+    if (socketKind === 'cmd' && this.tryHandleFileNamePacket(packet)) return;
     this.handleData(packet);
   }
 
@@ -228,6 +245,55 @@ class DvipClient {
     return true;
   }
 
+  tryHandleFileNamePacket(packet) {
+    if (!Array.isArray(this.pendingFileNameRequests) || this.pendingFileNameRequests.length === 0) return false;
+
+    // SE-3200 docs: DV_COMMAND_RESULT_FILE_NAME packets are fixed 0x2C bytes.
+    // DWORD0 size=0x2C, DWORD1 command=RESULT_FILE_NAME, DWORD2 nameLen (chars), DWORD3.. name (UTF-16LE).
+    if (!packet || packet.length !== 0x2c) return false;
+
+    const nameChars = packet.readUInt32LE(8);
+    const byteLen = Math.max(0, Math.min(32, Number(nameChars) * 2));
+    if (12 + byteLen > packet.length) return false;
+
+    const req = this.pendingFileNameRequests.shift();
+    if (!req) return true;
+
+    const nameBuf = packet.slice(12, 12 + byteLen);
+    const name = nameBuf.toString('utf16le').replace(/\u0000/g, '').trim();
+    const key = 'FILE_NAME_' + req.kind + '_' + req.num;
+
+    this.state[key] = name;
+    this.schedulePersistState();
+    this.broadcast({
+      type: 'state',
+      data: [{ key, value: name, sectionId: 0, subSectionId: 0, controlId: 0, label: key }],
+    });
+    return true;
+  }
+
+  enqueueWrite(buf) {
+    if (!this.cmdSocket || !this.connection.connected) throw new Error('Not connected');
+    this.writeQueue.push(buf);
+    if (!this.writeDraining) this._flushWriteQueue();
+  }
+
+  _flushWriteQueue() {
+    while (this.writeQueue.length > 0 && this.cmdSocket && this.connection.connected) {
+      const buf = this.writeQueue.shift();
+      const ok = this.cmdSocket.write(buf);
+      if (!ok) {
+        this.writeDraining = true;
+        this.cmdSocket.once('drain', () => {
+          this.writeDraining = false;
+          this._flushWriteQueue();
+        });
+        return;
+      }
+    }
+    this.writeDraining = false;
+  }
+
   sendSet(control, value) {
     if (!this.cmdSocket || !this.connection.connected) throw new Error('Not connected');
     const header = encodeControlHeader(control.sectionId, control.controlId, control.subSectionId || 0);
@@ -236,7 +302,7 @@ class DvipClient {
       header,
       encodeValue(control.type, value),
     ]);
-    this.cmdSocket.write(withPacketSize(payload));
+    this.enqueueWrite(withPacketSize(payload));
   }
 
   sendGet(control) {
@@ -246,7 +312,7 @@ class DvipClient {
       encodeControlHeader(control.sectionId, control.controlId, control.subSectionId || 0),
       Buffer.alloc(4),
     ]);
-    this.cmdSocket.write(withPacketSize(payload));
+    this.enqueueWrite(withPacketSize(payload));
   }
 
   setInputName(input, name) {
@@ -281,6 +347,68 @@ class DvipClient {
       setTimeout(step, 35);
     };
     step();
+  }
+
+
+  requestFileName(kind, num) {
+    if (!this.cmdSocket || !this.connection.connected) throw new Error('Not connected');
+    const kindId = Number(kind);
+    const fileNum = Number(num);
+    if (!Number.isInteger(kindId) || kindId < 0 || kindId > 4) throw new Error('Invalid file kind');
+    if (!Number.isInteger(fileNum) || fileNum < 0 || fileNum > 999) throw new Error('Invalid file number');
+
+    const payload = Buffer.alloc(12);
+    payload.writeUInt32LE(11, 0); // DV_COMMAND_GET_FILE_NAME
+    payload.writeUInt32LE(kindId, 4);
+    payload.writeUInt32LE(fileNum, 8);
+
+    this.pendingFileNameRequests.push({ kind: kindId, num: fileNum });
+    this.cmdSocket.write(withPacketSize(payload));
+  }
+
+  requestFileNamesRange(kind, start, count) {
+    if (!this.cmdSocket || !this.connection.connected) throw new Error('Not connected');
+    const kindId = Number(kind);
+    const startNum = Number(start);
+    const countNum = Number(count);
+    if (!Number.isInteger(kindId) || kindId < 0 || kindId > 4) throw new Error('Invalid file kind');
+    if (!Number.isInteger(startNum) || startNum < 0 || startNum > 999) throw new Error('Invalid file start');
+    if (!Number.isInteger(countNum) || countNum < 1 || countNum > 128) throw new Error('Invalid file count');
+
+    let current = startNum;
+    const end = Math.min(999, startNum + countNum - 1);
+    const step = () => {
+      if (!this.cmdSocket || !this.connection.connected) return;
+      if (current > end) return;
+      this.requestFileName(kindId, current);
+      current += 1;
+      setTimeout(step, 35);
+    };
+    step();
+  }
+
+  setFileName(kind, num, name) {
+    if (!this.cmdSocket || !this.connection.connected) throw new Error('Not connected');
+    const kindId = Number(kind);
+    const fileNum = Number(num);
+    if (!Number.isInteger(kindId) || kindId < 0 || kindId > 4) throw new Error('Invalid file kind');
+    if (!Number.isInteger(fileNum) || fileNum < 0 || fileNum > 999) throw new Error('Invalid file number');
+
+    const nameStr = String(name ?? '');
+    const nameBuf = Buffer.from(nameStr, 'utf16le');
+    const nameChars = Math.floor(nameBuf.length / 2);
+
+    const fixed = Buffer.alloc(16);
+    fixed.writeUInt32LE(12, 0); // DV_COMMAND_SET_FILE_NAME
+    fixed.writeUInt32LE(kindId, 4);
+    fixed.writeUInt32LE(fileNum, 8);
+    fixed.writeUInt32LE(nameChars, 12);
+
+    this.cmdSocket.write(withPacketSize(Buffer.concat([fixed, nameBuf])));
+
+    const key = 'FILE_NAME_' + kindId + '_' + fileNum;
+    this.state[key] = nameStr;
+    this.schedulePersistState();
   }
 
   requestStateSnapshot() {

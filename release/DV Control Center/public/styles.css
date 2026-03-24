@@ -807,6 +807,18 @@ button.muted {
   .flex-bank-grid {
     grid-template-columns: 1fr;
   }
+  .files-ops-grid {
+    grid-template-columns: 1fr;
+  }
+  .files-op-line {
+    grid-template-columns: 1fr;
+  }
+  .files-list-row {
+    grid-template-columns: 1fr;
+  }
+  .files-range-preset-row {
+    grid-template-columns: 1fr;
+  }
   .action-card-head {
     grid-template-columns: 1fr;
   }
@@ -868,6 +880,111 @@ button.muted {
   margin-top: 0;
 }
 
+
+.files-list-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 6px;
+  align-items: end;
+  margin-top: 6px;
+}
+
+.files-list-row button {
+  margin-top: 0;
+  min-width: 110px;
+}
+
+.files-names-table {
+  margin-top: 6px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  max-height: 180px;
+  overflow: auto;
+  background: #ffffff;
+}
+
+
+
+
+.files-range-preset-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.files-range-preset-row button {
+  margin-top: 0;
+}
+.files-range-preset-row button.active {
+  background: #dbeef9;
+  border-color: #4f8fb6;
+  color: #0d2d43;
+}
+
+.files-list-tools-row {
+  margin-top: 4px;
+}
+
+.files-name-btn {
+  width: 100%;
+  background: #ffffff;
+  color: var(--ink);
+  border: 0;
+  border-radius: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.files-name-btn:hover {
+  background: #f3f8fc;
+}
+
+.files-name-btn.selected {
+  background: #dbeef9;
+}
+
+.files-names-table .files-name-row {
+  display: grid;
+  grid-template-columns: 50px 1fr;
+  gap: 8px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #edf3f8;
+  font-size: 11px;
+}
+
+.files-names-table .files-name-row:last-child {
+  border-bottom: none;
+}
+
+.files-names-table .files-name-slot {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.files-names-table .files-name-empty {
+  color: #90a4b2;
+  font-style: italic;
+}
+
+.files-ops-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.files-op-line {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  align-items: end;
+  margin-bottom: 6px;
+}
+
+#filesStatus {
+  margin: 2px 0 8px;
+}
 .menu-root {
   display: grid;
   grid-template-columns: 1fr;
@@ -975,5 +1092,9 @@ button.muted {
   padding: 2px 4px;
   font-size: 10px;
 }
+
+
+
+
 
 

@@ -261,7 +261,84 @@
     </section>
 
     <section id="tab-files" class="tab">
-      <div class="card"><h2 data-i18n="files.title">Files</h2><div id="filesControls" class="menu-grid"></div></div>
+      <div class="card">
+        <h2 data-i18n="files.title">Files</h2>
+        <div id="filesOps" class="files-ops-grid">
+          <div class="menu-item">
+            <div class="menu-item-title" data-i18n="files.memoryTitle">User Memory</div>
+            <div class="files-op-line">
+              <label class="inline-tool"><span data-i18n="files.slot">Slot</span> <input id="filesMemSlot" type="number" min="1" max="999" step="1" value="1"></label>
+              <label class="checkbox-inline inline-tool"><span data-i18n="files.loadAll">Load All</span> <input id="filesMemLoadAll" type="checkbox" checked></label>
+            </div>
+            <div class="row compact-row">
+              <button id="filesMemLoad" class="muted" data-i18n="files.load">Load</button>
+              <button id="filesMemStore" data-i18n="files.store">Store</button>
+              <button id="filesMemDelete" class="muted" data-i18n="files.delete">Delete</button>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-title" data-i18n="files.stillTitle">Still Memory</div>
+            <div class="files-op-line">
+              <label class="inline-tool"><span data-i18n="files.slot">Slot</span> <input id="filesStillSlot" type="number" min="0" max="999" step="1" value="0"></label>
+              <label class="inline-tool"><span data-i18n="files.buffer">Buffer</span> <input id="filesStillBuf" type="number" min="0" max="3" step="1" value="0"></label>
+            </div>
+            <div class="row compact-row">
+              <button id="filesStillLoad" class="muted" data-i18n="files.load">Load</button>
+              <button id="filesStillStore" data-i18n="files.store">Store</button>
+              <button id="filesStillGrab" class="muted" data-i18n="files.grab">Grab</button>
+              <button id="filesStillDelete" class="muted" data-i18n="files.delete">Delete</button>
+            </div>
+          </div>
+
+          <div class="menu-item">
+            <div class="menu-item-title" data-i18n="files.namesTitle">Names</div>
+            <div class="files-op-line">
+              <label class="inline-tool"><span data-i18n="files.kind">Kind</span>
+                <select id="filesNameKind">
+                  <option value="0" data-i18n="files.kind.mem">Mem</option>
+                  <option value="1" data-i18n="files.kind.still">Still</option>
+                  <option value="2" data-i18n="files.kind.clip">Clip</option>
+                  <option value="3" data-i18n="files.kind.logo">Logo</option>
+                  <option value="4" data-i18n="files.kind.ani">Ani Logo</option>
+                </select>
+              </label>
+              <label class="inline-tool"><span data-i18n="files.slot">Slot</span> <input id="filesNameNum" type="number" min="0" max="999" step="1" value="1"></label>
+            </div>
+            <label class="inline-tool"><span data-i18n="files.name">Name</span> <input id="filesNameValue" /></label>
+            <div class="row compact-row">
+              <button id="filesNameGet" class="muted" data-i18n="files.get">Get</button>
+              <button id="filesNameSet" data-i18n="files.set">Set</button>
+            </div>
+            <div class="files-list-row">
+              <label class="inline-tool"><span data-i18n="files.start">Start</span> <input id="filesNameStart" type="number" min="0" max="999" step="1" value="1"></label>
+              <label class="inline-tool"><span data-i18n="files.count">Count</span> <input id="filesNameCount" type="number" min="1" max="64" step="1" value="16"></label>
+              <button id="filesNamesRefresh" class="muted" data-i18n="files.refresh">Refresh List</button>
+            </div>
+            <div class="files-range-preset-row">
+              <button class="muted files-range-preset" data-start="1" data-count="16" data-i18n="files.range.1">1-16</button>
+              <button class="muted files-range-preset" data-start="17" data-count="16" data-i18n="files.range.2">17-32</button>
+              <button class="muted files-range-preset" data-start="33" data-count="16" data-i18n="files.range.3">33-48</button>
+              <button class="muted files-range-preset" data-start="49" data-count="16" data-i18n="files.range.4">49-64</button>
+            </div>
+            <div class="files-list-row files-list-tools-row">
+              <label class="inline-tool"><span data-i18n="files.filter">Filter</span> <input id="filesNameFilter" placeholder="" /></label>
+              <label class="inline-tool"><span data-i18n="files.sort">Sort</span>
+                <select id="filesNameSort">
+                  <option value="slotAsc" data-i18n="files.sort.slotAsc">Slot asc</option>
+                  <option value="slotDesc" data-i18n="files.sort.slotDesc">Slot desc</option>
+                  <option value="nameAsc" data-i18n="files.sort.nameAsc">Name asc</option>
+                  <option value="nameDesc" data-i18n="files.sort.nameDesc">Name desc</option>
+                </select>
+              </label>
+              <button id="filesNameUseSelected" class="muted" data-i18n="files.useSelected">Use Selected</button>
+            </div>
+            <div id="filesNamesTable" class="files-names-table"></div>
+          </div>
+        </div>
+        <div id="filesStatus" class="hint"></div>
+        <div id="filesControls" class="menu-grid"></div>
+      </div>
     </section>
 
     <section id="tab-setup" class="tab">
@@ -305,6 +382,8 @@
   <script src="./merge-engine-ui.js"></script>
 </body>
 </html>
+
+
 
 
 

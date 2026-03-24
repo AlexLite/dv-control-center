@@ -11,6 +11,13 @@
     return item ? item.label : fallback;
   }
 
+  function ensureUiState(deps) {
+    if (!deps.state || typeof deps.state !== 'object') deps.state = {};
+    if (!deps.state.values || typeof deps.state.values !== 'object') deps.state.values = {};
+    if (!deps.state.filesNamesSelection || typeof deps.state.filesNamesSelection !== 'object') deps.state.filesNamesSelection = {};
+    return deps.state;
+  }
+
   function updateMemoryStatus(deps) {
     const { byId, controlValue, pickValues } = deps;
     const el = byId('memStatus');
@@ -42,9 +49,264 @@
     const slot = Number(controlValue('MEMORY_SELECT', 1)) || 1;
     if (byId('memSlot')) byId('memSlot').value = String(Math.max(1, Math.min(999, slot)));
     if (byId('memLoadAll')) byId('memLoadAll').checked = Number(controlValue('MEMORY_LOAD_ALL_SECTIONS', 1)) !== 0;
-    byId('memSave')?.addEventListener('click', () => runMemoryCommand(deps, 2));
-    byId('memLoad')?.addEventListener('click', () => runMemoryCommand(deps, 1));
+    if (byId('memSave')) byId('memSave').onclick = () => runMemoryCommand(deps, 2);
+    if (byId('memLoad')) byId('memLoad').onclick = () => runMemoryCommand(deps, 1);
     updateMemoryStatus(deps);
+    syncFilesOps(deps);
+    updateFilesStatus(deps);
+  }
+
+  function updateFilesStatus(deps) {
+    const { byId, controlValue, pickValues } = deps;
+    const state = ensureUiState(deps);
+    const cv = (typeof controlValue === 'function')
+      ? controlValue
+      : (label, fallback) => ((state && state.values && state.values[label] !== undefined) ? state.values[label] : fallback);
+    const pv = (typeof pickValues === 'function') ? pickValues : (() => []);
+    const el = byId('filesStatus');
+    if (!el) return;
+    const memStateCode = Number(cv('MEMORY_STATE', 0));
+    const memResultCode = Number(cv('MEMORY_RESULT', 0));
+    const memEventCode = Number(cv('MEMORY_EVENT', 0));
+    const stillStateCode = Number(cv('STILL_STATE', 0));
+    const stillResultCode = Number(cv('STILL_RESULT', 0));
+    const stillEventCode = Number(cv('STILL_EVENT', 0));
+    const memState = pickChoiceLabel(pv, 'MEMORY_STATE', memStateCode, `STATE_${memStateCode}`);
+    const memResult = pickChoiceLabel(pv, 'MEMORY_RESULT', memResultCode, `RESULT_${memResultCode}`);
+    const stillState = pickChoiceLabel(pv, 'STILL_STATE', stillStateCode, `STATE_${stillStateCode}`);
+    const stillResult = pickChoiceLabel(pv, 'STILL_RESULT', stillResultCode, `RESULT_${stillResultCode}`);
+    el.textContent = t('files.status', {
+      memState,
+      memResult,
+      memEvent: memEventCode,
+      stillState,
+      stillResult,
+      stillEvent: stillEventCode,
+    });
+  }
+
+  async function runStillCommand(deps, commandId) {
+    const { byId, clamp, sendControl, api } = deps;
+    const slot = clamp(Number(byId('filesStillSlot')?.value || 0), 0, 999);
+    const buf = clamp(Number(byId('filesStillBuf')?.value || 0), 0, 3);
+    if (byId('filesStillSlot')) byId('filesStillSlot').value = String(slot);
+    if (byId('filesStillBuf')) byId('filesStillBuf').value = String(buf);
+    await sendControl('STILL_SELECT', slot);
+    await sendControl('STILL_BUF', buf);
+    await sendControl('STILL_COMMAND', commandId);
+    setTimeout(() => {
+      sendControl('STILL_COMMAND', 0).catch(() => {});
+      api('/api/state/refresh', 'POST', {}).catch(() => {});
+    }, 120);
+  }
+
+  function renderFilesNamesTable(deps) {
+    const { byId, clamp } = deps;
+    const state = ensureUiState(deps);
+    const table = byId('filesNamesTable');
+    if (!table) return;
+
+    const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+    const startNum = clamp(Number(byId('filesNameStart')?.value || 1), 0, 999);
+    const countNum = clamp(Number(byId('filesNameCount')?.value || 16), 1, 64);
+    const filterText = String(byId('filesNameFilter')?.value || '').trim().toLowerCase();
+    const sortMode = String(byId('filesNameSort')?.value || 'slotAsc');
+
+    const rows = [];
+    for (let slot = startNum; slot < startNum + countNum && slot <= 999; slot += 1) {
+      const key = 'FILE_NAME_' + kindId + '_' + slot;
+      const raw = (state && state.values) ? state.values[key] : undefined;
+      const name = (raw === undefined || raw === null) ? '' : String(raw);
+      rows.push({ slot, name });
+    }
+
+    let visible = rows.filter((x) => x.name !== '');
+    if (filterText) {
+      visible = visible.filter((x) => String(x.slot).includes(filterText) || x.name.toLowerCase().includes(filterText));
+    }
+
+    visible.sort((a, b) => {
+      if (sortMode === 'slotDesc') return b.slot - a.slot;
+      if (sortMode === 'nameAsc') return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }) || (a.slot - b.slot);
+      if (sortMode === 'nameDesc') return b.name.localeCompare(a.name, undefined, { sensitivity: 'base' }) || (a.slot - b.slot);
+      return a.slot - b.slot;
+    });
+
+    const selectedSlot = Number(state.filesNamesSelection[kindId]);
+
+    if (visible.length === 0) {
+      table.innerHTML = '<div class="files-name-row"><div class="files-name-empty">' + t('files.listEmpty') + '</div></div>';
+      return;
+    }
+
+    table.innerHTML = visible.map((x) => {
+      const isSelected = Number.isFinite(selectedSlot) && selectedSlot === x.slot;
+      return '<button class="files-name-row files-name-btn' + (isSelected ? ' selected' : '') + '" data-slot="' + x.slot + '">' 
+        + '<div class="files-name-slot">#' + x.slot + '</div>'
+        + '<div>' + x.name.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>'
+        + '</button>';
+    }).join('');
+  }
+
+  function syncFilesOps(deps) {
+    const { byId, controlValue, clamp } = deps;
+    const state = ensureUiState(deps);
+    const cv = (typeof controlValue === 'function')
+      ? controlValue
+      : (label, fallback) => ((state && state.values && state.values[label] !== undefined) ? state.values[label] : fallback);
+    const memSlot = Number(cv('MEMORY_SELECT', 1)) || 1;
+    const memAll = Number(cv('MEMORY_LOAD_ALL_SECTIONS', 1)) !== 0;
+    const stillSlot = Number(cv('STILL_SELECT', 0)) || 0;
+    const stillBuf = Number(cv('STILL_BUF', 0)) || 0;
+
+    const memSlotEl = byId('filesMemSlot');
+    if (memSlotEl && document.activeElement !== memSlotEl) memSlotEl.value = String(Math.max(1, Math.min(999, memSlot)));
+    const memAllEl = byId('filesMemLoadAll');
+    if (memAllEl && document.activeElement !== memAllEl) memAllEl.checked = memAll;
+    const stillSlotEl = byId('filesStillSlot');
+    if (stillSlotEl && document.activeElement !== stillSlotEl) stillSlotEl.value = String(Math.max(0, Math.min(999, stillSlot)));
+    const stillBufEl = byId('filesStillBuf');
+    if (stillBufEl && document.activeElement !== stillBufEl) stillBufEl.value = String(Math.max(0, Math.min(3, stillBuf)));
+
+    const kindEl = byId('filesNameKind');
+    const numEl = byId('filesNameNum');
+    const valEl = byId('filesNameValue');
+    const startEl = byId('filesNameStart');
+    const countEl = byId('filesNameCount');
+    const filterEl = byId('filesNameFilter');
+    const sortEl = byId('filesNameSort');
+
+    if (startEl && document.activeElement !== startEl) startEl.value = String(clamp(Number(startEl.value || 1), 0, 999));
+    if (countEl && document.activeElement !== countEl) countEl.value = String(clamp(Number(countEl.value || 16), 1, 64));
+    if (sortEl && !sortEl.value) sortEl.value = 'slotAsc';
+    if (filterEl && filterEl.value === undefined) filterEl.value = '';
+
+    if (kindEl && numEl && valEl) {
+      const kindId = clamp(Number(kindEl.value || 0), 0, 4);
+      const fileNum = clamp(Number(numEl.value || 1), 0, 999);
+      const key = 'FILE_NAME_' + kindId + '_' + fileNum;
+      const v = (state && state.values) ? state.values[key] : undefined;
+      if (document.activeElement !== kindEl) kindEl.value = String(kindId);
+      if (document.activeElement !== numEl) numEl.value = String(fileNum);
+      if (document.activeElement !== valEl) valEl.value = (v === undefined || v === null) ? '' : String(v);
+    }
+
+    syncFilesRangePresetActive(deps);
+    renderFilesNamesTable(deps);
+  }
+
+  function syncFilesRangePresetActive(deps) {
+    const { byId, clamp } = deps;
+    const root = byId('filesOps');
+    if (!root) return;
+    const startNum = clamp(Number(byId('filesNameStart')?.value || 1), 0, 999);
+    const countNum = clamp(Number(byId('filesNameCount')?.value || 16), 1, 64);
+    root.querySelectorAll('.files-range-preset').forEach((btn) => {
+      const presetStart = clamp(Number(btn.dataset.start || 1), 0, 999);
+      const presetCount = clamp(Number(btn.dataset.count || 16), 1, 64);
+      const active = (presetStart === startNum) && (presetCount === countNum);
+      btn.classList.toggle('active', active);
+      btn.classList.toggle('muted', !active);
+    });
+  }
+
+  function buildFilesOps(deps) {
+    const { byId, clamp, sendControl, api } = deps;
+    const root = byId('filesOps');
+    if (!root || root.dataset.bound === '1') return;
+    root.dataset.bound = '1';
+
+    const runMem = async (commandId) => {
+      const slot = clamp(Number(byId('filesMemSlot')?.value || 1), 1, 999);
+      const loadAll = byId('filesMemLoadAll')?.checked ? 1 : 0;
+      if (byId('filesMemSlot')) byId('filesMemSlot').value = String(slot);
+      await sendControl('MEMORY_SELECT', slot);
+      await sendControl('MEMORY_LOAD_ALL_SECTIONS', loadAll);
+      await sendControl('MEMORY_COMMAND', commandId);
+      setTimeout(() => {
+        sendControl('MEMORY_COMMAND', 0).catch(() => {});
+        api('/api/state/refresh', 'POST', {}).catch(() => {});
+      }, 120);
+    };
+
+    byId('filesMemLoad')?.addEventListener('click', () => runMem(1));
+    byId('filesMemStore')?.addEventListener('click', () => runMem(2));
+    byId('filesMemDelete')?.addEventListener('click', () => runMem(3));
+
+    byId('filesStillLoad')?.addEventListener('click', () => runStillCommand(deps, 1));
+    byId('filesStillStore')?.addEventListener('click', () => runStillCommand(deps, 2));
+    byId('filesStillGrab')?.addEventListener('click', () => runStillCommand(deps, 3));
+    byId('filesStillDelete')?.addEventListener('click', () => runStillCommand(deps, 4));
+
+    const refreshName = () => syncFilesOps(deps);
+    byId('filesNameKind')?.addEventListener('change', refreshName);
+    byId('filesNameNum')?.addEventListener('input', refreshName);
+    byId('filesNameStart')?.addEventListener('input', refreshName);
+    byId('filesNameCount')?.addEventListener('input', refreshName);
+    byId('filesNameFilter')?.addEventListener('input', refreshName);
+    byId('filesNameSort')?.addEventListener('change', refreshName);
+
+    byId('filesNameGet')?.addEventListener('click', async () => {
+      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const fileNum = clamp(Number(byId('filesNameNum')?.value || 0), 0, 999);
+      await api('/api/file-name/get', 'POST', { kind: kindId, num: fileNum });
+    });
+
+    byId('filesNameSet')?.addEventListener('click', async () => {
+      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const fileNum = clamp(Number(byId('filesNameNum')?.value || 0), 0, 999);
+      const name = String(byId('filesNameValue')?.value || '');
+      await api('/api/file-name', 'POST', { kind: kindId, num: fileNum, name });
+      setTimeout(() => syncFilesOps(deps), 80);
+    });
+
+    byId('filesNamesTable')?.addEventListener('click', (ev) => {
+      const target = ev.target?.closest?.('.files-name-btn');
+      if (!target) return;
+      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const slot = clamp(Number(target.dataset.slot || 0), 0, 999);
+      const state = ensureUiState(deps);
+      state.filesNamesSelection[kindId] = slot;
+      if (byId('filesNameNum')) byId('filesNameNum').value = String(slot);
+      const key = 'FILE_NAME_' + kindId + '_' + slot;
+      const current = state.values?.[key];
+      if (byId('filesNameValue') && current !== undefined && current !== null) byId('filesNameValue').value = String(current);
+      renderFilesNamesTable(deps);
+    });
+
+    byId('filesNameUseSelected')?.addEventListener('click', () => {
+      const state = ensureUiState(deps);
+      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const sel = Number(state.filesNamesSelection?.[kindId]);
+      if (!Number.isFinite(sel)) return;
+      if (byId('filesNameNum')) byId('filesNameNum').value = String(sel);
+      const key = 'FILE_NAME_' + kindId + '_' + sel;
+      const current = state.values?.[key];
+      if (byId('filesNameValue')) byId('filesNameValue').value = (current === undefined || current === null) ? '' : String(current);
+      syncFilesOps(deps);
+    });
+
+    byId('filesNamesRefresh')?.addEventListener('click', async () => {
+      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const startNum = clamp(Number(byId('filesNameStart')?.value || 1), 0, 999);
+      const countNum = clamp(Number(byId('filesNameCount')?.value || 16), 1, 64);
+      await api('/api/file-name/get-range', 'POST', { kind: kindId, start: startNum, count: countNum });
+    });
+
+    root.querySelectorAll('.files-range-preset').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const startNum = clamp(Number(btn.dataset.start || 1), 0, 999);
+        const countNum = clamp(Number(btn.dataset.count || 16), 1, 64);
+        const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+        if (byId('filesNameStart')) byId('filesNameStart').value = String(startNum);
+        if (byId('filesNameCount')) byId('filesNameCount').value = String(countNum);
+        syncFilesOps(deps);
+        await api('/api/file-name/get-range', 'POST', { kind: kindId, start: startNum, count: countNum });
+      });
+    });
+
+    syncFilesOps(deps);
+    updateFilesStatus(deps);
   }
 
   function buildCameraNames(deps) {
@@ -665,8 +927,26 @@
       root.appendChild(group);
     }
   }
+  function renderFilesGroup(deps, root, items) {
+    buildFilesOps(deps);
+    syncFilesOps(deps);
+    updateFilesStatus(deps);
+
+    root.innerHTML = '';
+    const generic = (items || []).filter((x) => {
+      const label = String(x?.control?.label || '');
+      return !label.startsWith('MEMORY_') && !label.startsWith('STILL_');
+    });
+
+    if (generic.length > 0) {
+      renderBucketedGroup(deps, root, generic, 'files');
+    }
+  }
+
   function syncMenuControlValues(deps) {
     const { state } = deps;
+    syncFilesOps(deps);
+    updateFilesStatus(deps);
     document.querySelectorAll('[data-menu-control-label]').forEach((el) => {
       if (document.activeElement === el) return;
       const label = el.dataset.menuControlLabel;
@@ -730,7 +1010,7 @@
       const root = byId(target.id);
       if (!root) continue;
       const items = groupBuckets.get(target.group) || [];
-      const hasItems = items.length > 0;
+      const hasItems = items.length > 0 || (target.group === 'files' && !!byId('filesOps')); 
 
       if (!hasItems) {
         setMenuTabVisible(target.group, false);
@@ -753,7 +1033,11 @@
         renderSetupGroups(deps, root, items);
         continue;
       }
-      if (target.group === 'inputs' || target.group === 'outputs' || target.group === 'audio' || target.group === 'files') {
+      if (target.group === 'files') {
+        renderFilesGroup(deps, root, items);
+        continue;
+      }
+      if (target.group === 'inputs' || target.group === 'outputs' || target.group === 'audio') {
         renderBucketedGroup(deps, root, items, target.group);
         continue;
       }
@@ -789,6 +1073,10 @@
     syncMenuControlValues,
   };
 }(window));
+
+
+
+
 
 
 
