@@ -1,4 +1,5 @@
 const assert = require('assert')
+const EventEmitter = require('events')
 const { MergeEngine } = require('../lib/merge-engine')
 
 function delay(ms) {
@@ -7,12 +8,13 @@ function delay(ms) {
 
 async function run() {
   const sent = []
-  const client = {
+  const client = Object.assign(new EventEmitter(), {
     connection: { connected: true },
+    cmdSocket: null,
     sendSet(control, value) {
       sent.push({ control, value })
     },
-  }
+  })
   const catalog = { byLabel: new Map() }
   const engine = new MergeEngine({
     client,
@@ -46,7 +48,7 @@ async function run() {
     ],
   }
 
-  engine.runToState(target, { durationMs: 250, fps: 10, easing: 'Linear' })
+  engine.runToState(target, { durationMs: 250, fps: 25, easing: 'Linear' })
   await delay(450)
 
   const scaleWrites = sent.filter((x) => x.control.sectionId === 2 && x.control.subSectionId === 2 && (x.control.controlId === 7 || x.control.controlId === 44 || x.control.controlId === 81 || x.control.controlId === 118))

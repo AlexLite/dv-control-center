@@ -125,8 +125,21 @@ function main() {
     return a.controlId - b.controlId;
   });
 
-  const output = buildOutput(rows);
   const outPath = path.join(__dirname, '..', 'data', 'register-map.full.json');
+
+  let prevGeneratedAt = null;
+  try {
+    if (fs.existsSync(outPath)) {
+      const rawPrev = fs.readFileSync(outPath, 'utf8');
+      const parsedPrev = JSON.parse(rawPrev || '{}');
+      if (parsedPrev && typeof parsedPrev === 'object' && parsedPrev.generatedAt) prevGeneratedAt = String(parsedPrev.generatedAt);
+    }
+  } catch (_) {
+    prevGeneratedAt = null;
+  }
+
+  const output = buildOutput(rows);
+  if (prevGeneratedAt) output.generatedAt = prevGeneratedAt;
   fs.mkdirSync(path.dirname(outPath), { recursive: true });
   fs.writeFileSync(outPath, `${JSON.stringify(output, null, 2)}\n`, 'utf8');
   console.log(`Saved ${rows.length} controls to ${outPath}`);
