@@ -8,6 +8,11 @@ const PIP_MAP = { en: 0, x: 1, y: 2, w: 5, h: 6, cl: 9, cr: 10, ct: 11, cb: 12, 
 const WINDOW_COUNT = 4
 const FLEX_NUMERIC_KEYS = ['x', 'y', 's', 'cl', 'cr', 'ct', 'cb']
 const PIP_NUMERIC_KEYS = ['x', 'y', 's', 'cl', 'cr', 'ct', 'cb', 'bs', 'bo', 'bw', 'bh', 'bsa', 'bl']
+const DEFAULT_RUN_SETTINGS = Object.freeze({
+  durationMs: 1200,
+  fps: 25,
+  easing: 'EaseEase',
+})
 
 function clamp(n, min, max) {
   return Math.min(max, Math.max(min, n))
@@ -23,6 +28,12 @@ function ease(kind, t) {
 
 function modeKey(mode) {
   return String(mode || '').toLowerCase() === 'pip' ? 'pip' : 'flex'
+}
+
+function isTrueLike(v) {
+  if (typeof v === 'boolean') return v
+  const s = String(v || '').trim().toLowerCase()
+  return s === '1' || s === 'true' || s === 'yes' || s === 'on'
 }
 
 function defaultWindow(mode, index) {
@@ -149,6 +160,29 @@ function normalizeState(input, mode = 'flex') {
   }
 }
 
+function normalizeRunSettings(input = {}, prev = DEFAULT_RUN_SETTINGS) {
+  const source = input && typeof input === 'object' ? input : {}
+  const base = prev && typeof prev === 'object' ? prev : DEFAULT_RUN_SETTINGS
+
+  const durationRaw = Number(source.durationMs)
+  const fpsRaw = Number(source.fps)
+  const easingRaw = source.easing
+
+  let durationMs = base.durationMs
+  if (Number.isFinite(durationRaw)) {
+    if (durationRaw <= 0) durationMs = 0
+    else durationMs = clamp(Math.round(durationRaw), 1, 120000)
+  }
+  const fps = Number.isFinite(fpsRaw) && fpsRaw > 0
+    ? clamp(Math.round(fpsRaw), 1, 240)
+    : base.fps
+  const easing = ['Linear', 'EaseEase', 'EaseIn', 'EaseOut'].includes(easingRaw)
+    ? easingRaw
+    : base.easing
+
+  return { durationMs, fps, easing }
+}
+
 class MergeEngine {
   constructor({ client, catalog, storagePath }) {
     this.client = client
@@ -198,10 +232,12 @@ class MergeEngine {
     const kind = modeKey(mode)
     return {
       presets: {},
+      settings: { ...DEFAULT_RUN_SETTINGS },
       currentState: defaultState(kind),
       running: null,
       lastTickState: null,
       activePresetName: null,
+      trace: null,
     }
   }
 
@@ -209,9 +245,27 @@ class MergeEngine {
     return this.modeStates[modeKey(mode)]
   }
 
+  traceWrite(mode, meta = null) {
+    const ctx = this.ctx(mode)
+    if (!ctx?.trace?.enabled) return
+    ctx.trace.writes += 1
+    if (meta && ctx.trace.samples.length < 24) ctx.trace.samples.push(meta)
+  }
+
+  traceLog(mode, message, payload = null) {
+    const kind = modeKey(mode)
+    const ctx = this.ctx(kind)
+    if (!ctx?.trace?.enabled) return
+    const tag = `[merge-trace:${kind}:${ctx.trace.id}]`
+    if (payload) console.log(tag, message, payload)
+    else console.log(tag, message)
+  }
+
   load() {
     this.modeStates.flex.presets = {}
     this.modeStates.pip.presets = {}
+    this.modeStates.flex.settings = { ...DEFAULT_RUN_SETTINGS }
+    this.modeStates.pip.settings = { ...DEFAULT_RUN_SETTINGS }
 
     try {
       if (!fs.existsSync(this.storagePath)) return
@@ -224,11 +278,14 @@ class MergeEngine {
         for (const mode of ['flex', 'pip']) {
           const node = parsed[mode]
           if (!node || typeof node !== 'object') continue
+          const presetsNode = node.presets && typeof node.presets === 'object' ? node.presets : node
+          const settingsNode = node.settings && typeof node.settings === 'object' ? node.settings : null
           const next = {}
-          for (const [name, state] of Object.entries(node)) {
+          for (const [name, state] of Object.entries(presetsNode)) {
             next[name] = normalizeState(state, mode)
           }
           this.modeStates[mode].presets = next
+          this.modeStates[mode].settings = normalizeRunSettings(settingsNode, DEFAULT_RUN_SETTINGS)
         }
       } else {
         // Backward compatibility: old flat preset map = flex presets.
@@ -248,8 +305,14 @@ class MergeEngine {
     const dir = path.dirname(this.storagePath)
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
     const payload = {
-      flex: this.modeStates.flex.presets,
-      pip: this.modeStates.pip.presets,
+      flex: {
+        presets: this.modeStates.flex.presets,
+        settings: this.modeStates.flex.settings,
+      },
+      pip: {
+        presets: this.modeStates.pip.presets,
+        settings: this.modeStates.pip.settings,
+      },
     }
     fs.writeFileSync(this.storagePath, JSON.stringify(payload, null, 2), 'utf8')
   }
@@ -262,9 +325,21 @@ class MergeEngine {
       running: !!ctx.running,
       activePresetName: ctx.activePresetName || null,
       runningPresetName: ctx.running?.presetName || null,
+      settings: { ...ctx.settings },
       currentState: ctx.currentState,
       presets: Object.keys(ctx.presets).sort().map((name) => ({ name, state: ctx.presets[name] })),
     }
+  }
+
+  updateRunSettings(mode = 'flex', input = {}) {
+    const kind = modeKey(mode)
+    const ctx = this.ctx(kind)
+    const next = normalizeRunSettings(input, ctx.settings || DEFAULT_RUN_SETTINGS)
+    const prev = ctx.settings || DEFAULT_RUN_SETTINGS
+    const changed = next.durationMs !== prev.durationMs || next.fps !== prev.fps || next.easing !== prev.easing
+    ctx.settings = next
+    if (changed) this.save()
+    return { ...ctx.settings }
   }
 
   flexControlId(index, field) {
@@ -285,12 +360,14 @@ class MergeEngine {
   }
 
   sendRaw(mode, controlId, type, value, bankOrState = 1) {
+    this.traceWrite(mode, { kind: 'raw', controlId, type, value, bankOrState })
     this.client.sendSet(this.rawControl(mode, controlId, type, bankOrState), value)
   }
 
-  sendLabel(label, value) {
+  sendLabel(mode, label, value) {
     const control = this.catalog.byLabel.get(label)
     if (!control) return
+    this.traceWrite(mode, { kind: 'label', label, value })
     this.client.sendSet(control, value)
   }
 
@@ -298,13 +375,13 @@ class MergeEngine {
     const kind = modeKey(mode)
 
     if (kind === 'flex') {
-      if (force || !prevState || prevState.bg !== state.bg) this.sendLabel('SWITCHER_FLEX_SRC_BGND_SRC', state.bg)
-      if (force || !prevState || prevState.fg !== state.fg) this.sendLabel('SWITCHER_FLEX_SRC_FGND_SRC', state.fg)
-      if (force || !prevState || prevState.fgEnable !== state.fgEnable) this.sendLabel('SWITCHER_FLEX_SRC_FGND_ENABLE', state.fgEnable ? 1 : 0)
+      if (force || !prevState || prevState.bg !== state.bg) this.sendLabel(kind, 'SWITCHER_FLEX_SRC_BGND_SRC', state.bg)
+      if (force || !prevState || prevState.fg !== state.fg) this.sendLabel(kind, 'SWITCHER_FLEX_SRC_FGND_SRC', state.fg)
+      if (force || !prevState || prevState.fgEnable !== state.fgEnable) this.sendLabel(kind, 'SWITCHER_FLEX_SRC_FGND_ENABLE', state.fgEnable ? 1 : 0)
       for (let i = 1; i <= WINDOW_COUNT; i += 1) {
         const cur = state.windows[i - 1]
         const prev = prevState?.windows?.[i - 1]
-        if (force || !prev || prev.src !== cur.src) this.sendLabel(`SWITCHER_FLEX_SRC_DVE${i}_SRC`, cur.src)
+        if (force || !prev || prev.src !== cur.src) this.sendLabel(kind, `SWITCHER_FLEX_SRC_DVE${i}_SRC`, cur.src)
       }
       return
     }
@@ -312,7 +389,7 @@ class MergeEngine {
     for (let i = 1; i <= WINDOW_COUNT; i += 1) {
       const cur = state.windows[i - 1]
       const prev = prevState?.windows?.[i - 1]
-      if (force || !prev || prev.src !== cur.src) this.sendLabel(`SWITCHER_KEY${i}_KEY_SRC`, cur.src)
+      if (force || !prev || prev.src !== cur.src) this.sendLabel(kind, `SWITCHER_KEY${i}_KEY_SRC`, cur.src)
     }
   }
 
@@ -330,7 +407,8 @@ class MergeEngine {
   }
 
   _applyWindowsInner(kind, state, prevState, force) {
-    const TH = 0.005 // diff threshold — avoids flooding device with micro-changes
+    const TH_MOTION = 0.0012 // slightly lower threshold to reduce start/end sticking without flooding commands
+    const TH_DETAIL = 0.005 // stronger threshold for slower-changing detail params
 
     if (kind === 'flex') {
       const bank = Number(state?.bank) === 2 ? 2 : 1
@@ -341,15 +419,15 @@ class MergeEngine {
         const prev = sameBank ? prevState?.windows?.[i - 1] : null
 
         if (force || !prev || prev.en !== cur.en) this.sendRaw('flex', this.flexControlId(i, 'en'), 'flag', cur.en ? 1 : 0, bank)
-        if (force || !prev || Math.abs(prev.x - cur.x) > TH) this.sendRaw('flex', this.flexControlId(i, 'x'), 'float', cur.x, bank)
-        if (force || !prev || Math.abs(prev.y - cur.y) > TH) this.sendRaw('flex', this.flexControlId(i, 'y'), 'float', cur.y, bank)
-        if (force || !prev || Math.abs(prev.cl - cur.cl) > TH) this.sendRaw('flex', this.flexControlId(i, 'cl'), 'float', cur.cl, bank)
-        if (force || !prev || Math.abs(prev.cr - cur.cr) > TH) this.sendRaw('flex', this.flexControlId(i, 'cr'), 'float', cur.cr, bank)
-        if (force || !prev || Math.abs(prev.ct - cur.ct) > TH) this.sendRaw('flex', this.flexControlId(i, 'ct'), 'float', cur.ct, bank)
-        if (force || !prev || Math.abs(prev.cb - cur.cb) > TH) this.sendRaw('flex', this.flexControlId(i, 'cb'), 'float', cur.cb, bank)
-        if (force || !prev || Math.abs(prev.s - cur.s) > TH) {
+        if (force || !prev || Math.abs(prev.x - cur.x) > TH_MOTION) this.sendRaw('flex', this.flexControlId(i, 'x'), 'float', cur.x, bank)
+        if (force || !prev || Math.abs(prev.y - cur.y) > TH_MOTION) this.sendRaw('flex', this.flexControlId(i, 'y'), 'float', cur.y, bank)
+        if (force || !prev || Math.abs(prev.cl - cur.cl) > TH_DETAIL) this.sendRaw('flex', this.flexControlId(i, 'cl'), 'float', cur.cl, bank)
+        if (force || !prev || Math.abs(prev.cr - cur.cr) > TH_DETAIL) this.sendRaw('flex', this.flexControlId(i, 'cr'), 'float', cur.cr, bank)
+        if (force || !prev || Math.abs(prev.ct - cur.ct) > TH_DETAIL) this.sendRaw('flex', this.flexControlId(i, 'ct'), 'float', cur.ct, bank)
+        if (force || !prev || Math.abs(prev.cb - cur.cb) > TH_DETAIL) this.sendRaw('flex', this.flexControlId(i, 'cb'), 'float', cur.cb, bank)
+        if (force || !prev || Math.abs(prev.s - cur.s) > TH_MOTION) {
+          // Flex scale is a single hardware control; avoid duplicate write.
           this.sendRaw('flex', this.flexControlId(i, 'w'), 'float', cur.s, bank)
-          this.sendRaw('flex', this.flexControlId(i, 'h'), 'float', cur.s, bank)
         }
       }
       return
@@ -360,22 +438,22 @@ class MergeEngine {
       const prev = prevState?.windows?.[i - 1]
 
       if (force || !prev || prev.en !== cur.en) this.sendRaw('pip', this.pipControlId(i, 'en'), 'flag', cur.en ? 1 : 0)
-      if (force || !prev || Math.abs(prev.x - cur.x) > TH) this.sendRaw('pip', this.pipControlId(i, 'x'), 'float', cur.x)
-      if (force || !prev || Math.abs(prev.y - cur.y) > TH) this.sendRaw('pip', this.pipControlId(i, 'y'), 'float', cur.y)
-      if (force || !prev || Math.abs(prev.cl - cur.cl) > TH) this.sendRaw('pip', this.pipControlId(i, 'cl'), 'float', cur.cl)
-      if (force || !prev || Math.abs(prev.cr - cur.cr) > TH) this.sendRaw('pip', this.pipControlId(i, 'cr'), 'float', cur.cr)
-      if (force || !prev || Math.abs(prev.ct - cur.ct) > TH) this.sendRaw('pip', this.pipControlId(i, 'ct'), 'float', cur.ct)
-      if (force || !prev || Math.abs(prev.cb - cur.cb) > TH) this.sendRaw('pip', this.pipControlId(i, 'cb'), 'float', cur.cb)
-      if (force || !prev || Math.abs(prev.s - cur.s) > TH) {
+      if (force || !prev || Math.abs(prev.x - cur.x) > TH_MOTION) this.sendRaw('pip', this.pipControlId(i, 'x'), 'float', cur.x)
+      if (force || !prev || Math.abs(prev.y - cur.y) > TH_MOTION) this.sendRaw('pip', this.pipControlId(i, 'y'), 'float', cur.y)
+      if (force || !prev || Math.abs(prev.cl - cur.cl) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'cl'), 'float', cur.cl)
+      if (force || !prev || Math.abs(prev.cr - cur.cr) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'cr'), 'float', cur.cr)
+      if (force || !prev || Math.abs(prev.ct - cur.ct) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'ct'), 'float', cur.ct)
+      if (force || !prev || Math.abs(prev.cb - cur.cb) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'cb'), 'float', cur.cb)
+      if (force || !prev || Math.abs(prev.s - cur.s) > TH_MOTION) {
         this.sendRaw('pip', this.pipControlId(i, 'w'), 'float', cur.s)
         this.sendRaw('pip', this.pipControlId(i, 'h'), 'float', cur.s)
       }
-      if (force || !prev || Math.abs(prev.bs - cur.bs) > TH) this.sendRaw('pip', this.pipControlId(i, 'bs'), 'int', cur.bs)
-      if (force || !prev || Math.abs(prev.bo - cur.bo) > TH) this.sendRaw('pip', this.pipControlId(i, 'bo'), 'float', cur.bo)
-      if (force || !prev || Math.abs(prev.bw - cur.bw) > TH) this.sendRaw('pip', this.pipControlId(i, 'bw'), 'float', cur.bw)
-      if (force || !prev || Math.abs(prev.bh - cur.bh) > TH) this.sendRaw('pip', this.pipControlId(i, 'bh'), 'float', cur.bh)
-      if (force || !prev || Math.abs(prev.bsa - cur.bsa) > TH) this.sendRaw('pip', this.pipControlId(i, 'bsa'), 'float', cur.bsa)
-      if (force || !prev || Math.abs(prev.bl - cur.bl) > TH) this.sendRaw('pip', this.pipControlId(i, 'bl'), 'float', cur.bl)
+      if (force || !prev || Math.abs(prev.bs - cur.bs) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'bs'), 'int', cur.bs)
+      if (force || !prev || Math.abs(prev.bo - cur.bo) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'bo'), 'float', cur.bo)
+      if (force || !prev || Math.abs(prev.bw - cur.bw) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'bw'), 'float', cur.bw)
+      if (force || !prev || Math.abs(prev.bh - cur.bh) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'bh'), 'float', cur.bh)
+      if (force || !prev || Math.abs(prev.bsa - cur.bsa) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'bsa'), 'float', cur.bsa)
+      if (force || !prev || Math.abs(prev.bl - cur.bl) > TH_DETAIL) this.sendRaw('pip', this.pipControlId(i, 'bl'), 'float', cur.bl)
     }
   }
 
@@ -416,11 +494,20 @@ class MergeEngine {
   stop(mode = 'flex') {
     const kind = modeKey(mode)
     const ctx = this.ctx(kind)
+    const hadRunning = !!ctx.running
     if (ctx.running) {
       ctx.running.cancelled = true
       if (ctx.running.timer) clearTimeout(ctx.running.timer)
     }
+    if (ctx.trace?.enabled && hadRunning) {
+      this.traceLog(kind, 'stop', {
+        ticks: ctx.trace.ticks,
+        writes: ctx.trace.writes,
+        durationMs: Date.now() - ctx.trace.startedAt,
+      })
+    }
     ctx.running = null
+    ctx.trace = null
   }
 
   interpolateWindow(mode, from, to, k, isFinal) {
@@ -453,13 +540,36 @@ class MergeEngine {
     const kind = modeKey(mode)
     const ctx = this.ctx(kind)
     const target = normalizeState(inputTarget, kind)
-    const durationMs = clamp(Number(opts.durationMs || 1200), 50, 120000)
-    const fps = clamp(Number(opts.fps || 25), 25, 50)
-    const easing = ['Linear', 'EaseEase', 'EaseIn', 'EaseOut'].includes(opts.easing) ? opts.easing : 'EaseEase'
+    const hasDuration = opts && Object.prototype.hasOwnProperty.call(opts, 'durationMs')
+    const hasFps = opts && Object.prototype.hasOwnProperty.call(opts, 'fps')
+    const hasEasing = opts && Object.prototype.hasOwnProperty.call(opts, 'easing')
+    const shouldUpdateSettings = hasDuration || hasFps || hasEasing
+    const settings = shouldUpdateSettings
+      ? this.updateRunSettings(kind, opts)
+      : normalizeRunSettings({}, ctx.settings || DEFAULT_RUN_SETTINGS)
+    const durationMs = settings.durationMs
+    const fps = settings.fps
+    const easing = settings.easing
+    const traceEnabled = isTrueLike(opts.debugTrace) || isTrueLike(process.env.MERGE_TRACE)
 
     this.stop(kind)
 
     const from = normalizeState(ctx.currentState, kind)
+    if (durationMs <= 0) {
+      // Instant mode: apply target directly without interpolation/ticking.
+      this.applySources(kind, target, false, from)
+      this.applyWindows(kind, target, from, false)
+      ctx.lastTickState = target
+      ctx.currentState = target
+      return {
+        ok: true,
+        instant: true,
+        durationMs: 0,
+        fps,
+        easing,
+      }
+    }
+
     const stepMs = Math.max(20, Math.round(1000 / fps))
     const start = Date.now()
 
@@ -467,6 +577,17 @@ class MergeEngine {
     this.applySources(kind, target, false, from)
     // Ensure first merge tick is compared to current state, not stale previous run tick.
     ctx.lastTickState = from
+    ctx.trace = {
+      enabled: !!traceEnabled,
+      id: Date.now().toString(36).slice(-6),
+      startedAt: Date.now(),
+      ticks: 0,
+      writes: 0,
+      samples: [],
+    }
+    this.traceLog(kind, 'start', { durationMs, fps, easing, presetName: presetName || null })
+
+    let frameIndex = 0
 
     const tick = () => {
       if (!ctx.running || ctx.running.cancelled) return
@@ -474,6 +595,7 @@ class MergeEngine {
       const t = clamp((now - start) / durationMs, 0, 1)
       const k = ease(easing, t)
       const isFinal = t >= 1
+      const writesBeforeTick = ctx.trace?.writes || 0
 
       const state = kind === 'flex'
         ? {
@@ -488,9 +610,16 @@ class MergeEngine {
         }
 
       try {
-        this.applyWindows(kind, state, ctx.lastTickState, isFinal)
-        ctx.lastTickState = state
-        ctx.currentState = state
+        if (isFinal) {
+          // Final commit: send only what still differs from the last emitted tick.
+          this.applyWindows(kind, target, ctx.lastTickState || from, false)
+          ctx.lastTickState = target
+          ctx.currentState = target
+        } else {
+          this.applyWindows(kind, state, ctx.lastTickState, false)
+          ctx.lastTickState = state
+          ctx.currentState = state
+        }
       } catch (err) {
         this.stop(kind)
         this.client.broadcast({
@@ -500,12 +629,28 @@ class MergeEngine {
         return
       }
 
+      if (ctx.trace?.enabled) {
+        const writesAfterTick = ctx.trace.writes
+        ctx.trace.ticks += 1
+        this.traceLog(kind, 'tick', {
+          tick: ctx.trace.ticks,
+          t: Number(t.toFixed(4)),
+          k: Number(k.toFixed(4)),
+          isFinal,
+          tickWrites: writesAfterTick - writesBeforeTick,
+        })
+      }
+
       if (isFinal) {
         this.stop(kind)
         return
       }
       if (ctx.running && !ctx.running.cancelled) {
-        ctx.running.timer = setTimeout(tick, stepMs)
+        // Drift-compensated schedule: anchor each frame to start time.
+        frameIndex += 1
+        const dueAt = start + (frameIndex * stepMs)
+        const delay = Math.max(0, dueAt - Date.now())
+        ctx.running.timer = setTimeout(tick, delay)
       }
     }
 

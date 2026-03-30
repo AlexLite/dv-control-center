@@ -18,6 +18,11 @@
     return deps.state;
   }
 
+  function getClamp(deps) {
+    if (deps && typeof deps.clamp === 'function') return deps.clamp;
+    return (n, min, max) => Math.min(max, Math.max(min, n));
+  }
+
   function updateMemoryStatus(deps) {
     const { byId, controlValue, pickValues } = deps;
     const el = byId('memStatus');
@@ -32,7 +37,8 @@
 
   async function runMemoryCommand(deps, commandId) {
     const { byId, clamp, sendControl, api } = deps;
-    const slot = clamp(Number(byId('memSlot')?.value || 1), 1, 999);
+    const clampFn = (typeof clamp === 'function') ? clamp : getClamp(deps);
+    const slot = clampFn(Number(byId('memSlot')?.value || 1), 1, 999);
     const loadAll = byId('memLoadAll')?.checked ? 1 : 0;
     byId('memSlot').value = String(slot);
     await sendControl('MEMORY_SELECT', slot);
@@ -87,8 +93,9 @@
 
   async function runStillCommand(deps, commandId) {
     const { byId, clamp, sendControl, api } = deps;
-    const slot = clamp(Number(byId('filesStillSlot')?.value || 0), 0, 999);
-    const buf = clamp(Number(byId('filesStillBuf')?.value || 0), 0, 3);
+    const clampFn = (typeof clamp === 'function') ? clamp : getClamp(deps);
+    const slot = clampFn(Number(byId('filesStillSlot')?.value || 0), 0, 999);
+    const buf = clampFn(Number(byId('filesStillBuf')?.value || 0), 0, 3);
     if (byId('filesStillSlot')) byId('filesStillSlot').value = String(slot);
     if (byId('filesStillBuf')) byId('filesStillBuf').value = String(buf);
     await sendControl('STILL_SELECT', slot);
@@ -102,13 +109,14 @@
 
   function renderFilesNamesTable(deps) {
     const { byId, clamp } = deps;
+    const clampFn = (typeof clamp === 'function') ? clamp : getClamp(deps);
     const state = ensureUiState(deps);
     const table = byId('filesNamesTable');
     if (!table) return;
 
-    const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
-    const startNum = clamp(Number(byId('filesNameStart')?.value || 1), 0, 999);
-    const countNum = clamp(Number(byId('filesNameCount')?.value || 16), 1, 64);
+    const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
+    const startNum = clampFn(Number(byId('filesNameStart')?.value || 1), 0, 999);
+    const countNum = clampFn(Number(byId('filesNameCount')?.value || 16), 1, 64);
     const filterText = String(byId('filesNameFilter')?.value || '').trim().toLowerCase();
     const sortMode = String(byId('filesNameSort')?.value || 'slotAsc');
 
@@ -150,6 +158,7 @@
 
   function syncFilesOps(deps) {
     const { byId, controlValue, clamp } = deps;
+    const clampFn = (typeof clamp === 'function') ? clamp : ((n, min, max) => Math.min(max, Math.max(min, n)));
     const state = ensureUiState(deps);
     const cv = (typeof controlValue === 'function')
       ? controlValue
@@ -176,14 +185,14 @@
     const filterEl = byId('filesNameFilter');
     const sortEl = byId('filesNameSort');
 
-    if (startEl && document.activeElement !== startEl) startEl.value = String(clamp(Number(startEl.value || 1), 0, 999));
-    if (countEl && document.activeElement !== countEl) countEl.value = String(clamp(Number(countEl.value || 16), 1, 64));
+    if (startEl && document.activeElement !== startEl) startEl.value = String(clampFn(Number(startEl.value || 1), 0, 999));
+    if (countEl && document.activeElement !== countEl) countEl.value = String(clampFn(Number(countEl.value || 16), 1, 64));
     if (sortEl && !sortEl.value) sortEl.value = 'slotAsc';
     if (filterEl && filterEl.value === undefined) filterEl.value = '';
 
     if (kindEl && numEl && valEl) {
-      const kindId = clamp(Number(kindEl.value || 0), 0, 4);
-      const fileNum = clamp(Number(numEl.value || 1), 0, 999);
+      const kindId = clampFn(Number(kindEl.value || 0), 0, 4);
+      const fileNum = clampFn(Number(numEl.value || 1), 0, 999);
       const key = 'FILE_NAME_' + kindId + '_' + fileNum;
       const v = (state && state.values) ? state.values[key] : undefined;
       if (document.activeElement !== kindEl) kindEl.value = String(kindId);
@@ -197,13 +206,14 @@
 
   function syncFilesRangePresetActive(deps) {
     const { byId, clamp } = deps;
+    const clampFn = (typeof clamp === 'function') ? clamp : ((n, min, max) => Math.min(max, Math.max(min, n)));
     const root = byId('filesOps');
     if (!root) return;
-    const startNum = clamp(Number(byId('filesNameStart')?.value || 1), 0, 999);
-    const countNum = clamp(Number(byId('filesNameCount')?.value || 16), 1, 64);
+    const startNum = clampFn(Number(byId('filesNameStart')?.value || 1), 0, 999);
+    const countNum = clampFn(Number(byId('filesNameCount')?.value || 16), 1, 64);
     root.querySelectorAll('.files-range-preset').forEach((btn) => {
-      const presetStart = clamp(Number(btn.dataset.start || 1), 0, 999);
-      const presetCount = clamp(Number(btn.dataset.count || 16), 1, 64);
+      const presetStart = clampFn(Number(btn.dataset.start || 1), 0, 999);
+      const presetCount = clampFn(Number(btn.dataset.count || 16), 1, 64);
       const active = (presetStart === startNum) && (presetCount === countNum);
       btn.classList.toggle('active', active);
       btn.classList.toggle('muted', !active);
@@ -212,12 +222,13 @@
 
   function buildFilesOps(deps) {
     const { byId, clamp, sendControl, api } = deps;
+    const clampFn = (typeof clamp === 'function') ? clamp : ((n, min, max) => Math.min(max, Math.max(min, n)));
     const root = byId('filesOps');
     if (!root || root.dataset.bound === '1') return;
     root.dataset.bound = '1';
 
     const runMem = async (commandId) => {
-      const slot = clamp(Number(byId('filesMemSlot')?.value || 1), 1, 999);
+      const slot = clampFn(Number(byId('filesMemSlot')?.value || 1), 1, 999);
       const loadAll = byId('filesMemLoadAll')?.checked ? 1 : 0;
       if (byId('filesMemSlot')) byId('filesMemSlot').value = String(slot);
       await sendControl('MEMORY_SELECT', slot);
@@ -247,14 +258,14 @@
     byId('filesNameSort')?.addEventListener('change', refreshName);
 
     byId('filesNameGet')?.addEventListener('click', async () => {
-      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
-      const fileNum = clamp(Number(byId('filesNameNum')?.value || 0), 0, 999);
+      const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const fileNum = clampFn(Number(byId('filesNameNum')?.value || 0), 0, 999);
       await api('/api/file-name/get', 'POST', { kind: kindId, num: fileNum });
     });
 
     byId('filesNameSet')?.addEventListener('click', async () => {
-      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
-      const fileNum = clamp(Number(byId('filesNameNum')?.value || 0), 0, 999);
+      const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const fileNum = clampFn(Number(byId('filesNameNum')?.value || 0), 0, 999);
       const name = String(byId('filesNameValue')?.value || '');
       await api('/api/file-name', 'POST', { kind: kindId, num: fileNum, name });
       setTimeout(() => syncFilesOps(deps), 80);
@@ -263,8 +274,8 @@
     byId('filesNamesTable')?.addEventListener('click', (ev) => {
       const target = ev.target?.closest?.('.files-name-btn');
       if (!target) return;
-      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
-      const slot = clamp(Number(target.dataset.slot || 0), 0, 999);
+      const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const slot = clampFn(Number(target.dataset.slot || 0), 0, 999);
       const state = ensureUiState(deps);
       state.filesNamesSelection[kindId] = slot;
       if (byId('filesNameNum')) byId('filesNameNum').value = String(slot);
@@ -276,7 +287,7 @@
 
     byId('filesNameUseSelected')?.addEventListener('click', () => {
       const state = ensureUiState(deps);
-      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
       const sel = Number(state.filesNamesSelection?.[kindId]);
       if (!Number.isFinite(sel)) return;
       if (byId('filesNameNum')) byId('filesNameNum').value = String(sel);
@@ -287,17 +298,17 @@
     });
 
     byId('filesNamesRefresh')?.addEventListener('click', async () => {
-      const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
-      const startNum = clamp(Number(byId('filesNameStart')?.value || 1), 0, 999);
-      const countNum = clamp(Number(byId('filesNameCount')?.value || 16), 1, 64);
+      const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
+      const startNum = clampFn(Number(byId('filesNameStart')?.value || 1), 0, 999);
+      const countNum = clampFn(Number(byId('filesNameCount')?.value || 16), 1, 64);
       await api('/api/file-name/get-range', 'POST', { kind: kindId, start: startNum, count: countNum });
     });
 
     root.querySelectorAll('.files-range-preset').forEach((btn) => {
       btn.addEventListener('click', async () => {
-        const startNum = clamp(Number(btn.dataset.start || 1), 0, 999);
-        const countNum = clamp(Number(btn.dataset.count || 16), 1, 64);
-        const kindId = clamp(Number(byId('filesNameKind')?.value || 0), 0, 4);
+        const startNum = clampFn(Number(btn.dataset.start || 1), 0, 999);
+        const countNum = clampFn(Number(btn.dataset.count || 16), 1, 64);
+        const kindId = clampFn(Number(byId('filesNameKind')?.value || 0), 0, 4);
         if (byId('filesNameStart')) byId('filesNameStart').value = String(startNum);
         if (byId('filesNameCount')) byId('filesNameCount').value = String(countNum);
         syncFilesOps(deps);
@@ -964,7 +975,12 @@
   }
 
   function buildMenuControls(deps) {
-    const { byId, state, isControlVisible } = deps || {};
+    const clampFallback = (n, min, max) => Math.min(max, Math.max(min, n));
+    const safeDeps = {
+      ...(deps || {}),
+      clamp: (deps && typeof deps.clamp === 'function') ? deps.clamp : clampFallback,
+    };
+    const { byId, state, isControlVisible } = safeDeps;
     if (typeof byId !== 'function') return;
 
     const tabTargets = [
@@ -1021,29 +1037,29 @@
       setMenuTabVisible(target.group, true);
 
       if (target.group === 'keyer') {
-        renderKeyCards(deps, root, items, 'Key', false);
+        renderKeyCards(safeDeps, root, items, 'Key', false);
         continue;
       }
       if (target.group === 'chroma') {
-        renderKeyCards(deps, root, items, 'Chroma', true);
+        renderKeyCards(safeDeps, root, items, 'Chroma', true);
         continue;
       }
       root.innerHTML = '';
       if (target.group === 'setup') {
-        renderSetupGroups(deps, root, items);
+        renderSetupGroups(safeDeps, root, items);
         continue;
       }
       if (target.group === 'files') {
-        renderFilesGroup(deps, root, items);
+        renderFilesGroup(safeDeps, root, items);
         continue;
       }
       if (target.group === 'inputs' || target.group === 'outputs' || target.group === 'audio') {
-        renderBucketedGroup(deps, root, items, target.group);
+        renderBucketedGroup(safeDeps, root, items, target.group);
         continue;
       }
       items.sort((a, b) => String(a.control.label).localeCompare(String(b.control.label)));
       for (const item of items) {
-        root.appendChild(renderMenuControlItem(deps, item.control, getMenuControlValue(deps, item.control.label)));
+        root.appendChild(renderMenuControlItem(safeDeps, item.control, getMenuControlValue(safeDeps, item.control.label)));
       }
     }
 
@@ -1059,7 +1075,7 @@
       }
     }
 
-    syncMenuControlValues(deps);
+    syncMenuControlValues(safeDeps);
   }
 
   global.DVIPPanelsUi = {

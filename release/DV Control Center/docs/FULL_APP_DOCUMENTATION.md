@@ -13,8 +13,8 @@ Primary goals:
 Main project path:
 - `C:\Users\pikul\Desktop\dev\DataVideo Control Center\datavideo-control-center`
 
-Companion reference module used for protocol/choices:
-- `C:\Users\pikul\Desktop\dev\DataVideo Control Center\companion-module-datavideo-dvip-master`
+Protocol/choices runtime source:
+- `docs/external` (bundled with release)
 
 ---
 

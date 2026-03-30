@@ -52,7 +52,8 @@ const FLEX_QUAD_POSITIONS = constants.FLEX_QUAD_POSITIONS || {
   3: { x: -0.5, y: -0.5 },
   4: { x: 0.5, y: -0.5 },
 };
-const shared = window.DVIPShared || {
+const sharedSource = (window.DVIPShared && typeof window.DVIPShared === 'object') ? window.DVIPShared : {};
+const sharedFallback = {
   clamp: (n, min, max) => Math.min(max, Math.max(min, n)),
   rawPosToPct: (v) => {
     const n = Number(v);
@@ -80,6 +81,17 @@ const shared = window.DVIPShared || {
   }),
   snapRectGeneric: (left, top, right, bottom) => ({ left, top, right, bottom }),
 };
+const shared = {
+  clamp: typeof sharedSource.clamp === 'function' ? sharedSource.clamp : sharedFallback.clamp,
+  rawPosToPct: typeof sharedSource.rawPosToPct === 'function' ? sharedSource.rawPosToPct : sharedFallback.rawPosToPct,
+  pctToRawPos: typeof sharedSource.pctToRawPos === 'function' ? sharedSource.pctToRawPos : sharedFallback.pctToRawPos,
+  rawScaleToPct: typeof sharedSource.rawScaleToPct === 'function' ? sharedSource.rawScaleToPct : sharedFallback.rawScaleToPct,
+  pctToRawScale: typeof sharedSource.pctToRawScale === 'function' ? sharedSource.pctToRawScale : sharedFallback.pctToRawScale,
+  flexToCanvas: typeof sharedSource.flexToCanvas === 'function' ? sharedSource.flexToCanvas : sharedFallback.flexToCanvas,
+  flexFromCanvasRect: typeof sharedSource.flexFromCanvasRect === 'function' ? sharedSource.flexFromCanvasRect : sharedFallback.flexFromCanvasRect,
+  getGuidePixelsFromList: typeof sharedSource.getGuidePixelsFromList === 'function' ? sharedSource.getGuidePixelsFromList : sharedFallback.getGuidePixelsFromList,
+  snapRectGeneric: typeof sharedSource.snapRectGeneric === 'function' ? sharedSource.snapRectGeneric : sharedFallback.snapRectGeneric,
+};
 const {
   clamp,
   rawPosToPct,
@@ -91,6 +103,7 @@ const {
   getGuidePixelsFromList,
   snapRectGeneric,
 } = shared;
+const clampSafe = (...args) => (typeof clamp === 'function' ? clamp : sharedFallback.clamp)(...args);
 
 function byId(id) {
   return document.getElementById(id);
@@ -127,7 +140,7 @@ function exposeHooks() {
       state,
       byId,
       api,
-      clamp,
+      clamp: clampSafe,
       syncCanvasResolution,
       pickValues,
     });
@@ -331,7 +344,7 @@ function loadJsonFileFromDisk() {
 function initNumberWheelNudge() {
   if (window.DVIPAppShell && typeof window.DVIPAppShell.initNumberWheelNudge === 'function') {
     return window.DVIPAppShell.initNumberWheelNudge({
-      clamp,
+      clamp: clampSafe,
     });
   }
 }
@@ -339,7 +352,7 @@ function initNumberWheelNudge() {
 function initSliderWheelNudge() {
   if (window.DVIPAppShell && typeof window.DVIPAppShell.initSliderWheelNudge === 'function') {
     return window.DVIPAppShell.initSliderWheelNudge({
-      clamp,
+      clamp: clampSafe,
     });
   }
 }
@@ -414,7 +427,7 @@ function buildMemoryControls() {
     return window.DVIPPanelsUi.buildMemoryControls({
       byId,
       controlValue,
-      clamp,
+      clamp: clampSafe,
       sendControl,
       api,
       pickValues,
@@ -454,7 +467,7 @@ function bindSliderNumber(id, kind, index) {
       markEditLock,
       drawPipCanvas,
       drawFlexCanvas,
-      clamp,
+      clamp: clampSafe,
       showResetContextMenu,
       pushEditorHistory,
     }, id, kind, index);
@@ -599,7 +612,7 @@ function drawPipCanvas() {
       pctToRawPos,
       pctToRawScale,
       getGuidePixelsFromList,
-      clamp,
+      clamp: clampSafe,
       normalizePipAspect,
       syncCanvasResolution,
     });
@@ -627,7 +640,7 @@ function enablePipMouse() {
       snapRectGeneric,
       isGuideSnapActive,
       pickValues,
-      clamp,
+      clamp: clampSafe,
     });
   }
 }
@@ -820,7 +833,7 @@ function normalizePipAspect() {
   if (window.DVIPEditorUiUtils && typeof window.DVIPEditorUiUtils.normalizePipAspect === 'function') {
     return window.DVIPEditorUiUtils.normalizePipAspect({
       byId,
-      clamp,
+      clamp: clampSafe,
       SCALE_RAW_MAX,
       rawScaleToPct,
     });
@@ -831,7 +844,7 @@ function normalizeFlexAspect() {
   if (window.DVIPEditorUiUtils && typeof window.DVIPEditorUiUtils.normalizeFlexAspect === 'function') {
     return window.DVIPEditorUiUtils.normalizeFlexAspect({
       byId,
-      clamp,
+      clamp: clampSafe,
       FLEX_WINDOW_COUNT,
       SCALE_RAW_MAX,
       rawScaleToPct,
@@ -1040,7 +1053,7 @@ function drawFlexCanvas() {
       pctToRawPos,
       pctToRawScale,
       getGuidePixelsFromList,
-      clamp,
+      clamp: clampSafe,
       FLEX_WINDOW_COUNT,
       normalizeFlexAspect,
       syncCanvasResolution,
@@ -1069,7 +1082,7 @@ function enableFlexMouse() {
       snapRectGeneric,
       isGuideSnapActive,
       pickValues,
-      clamp,
+      clamp: clampSafe,
       FLEX_WINDOW_COUNT,
     });
   }
@@ -1115,6 +1128,9 @@ function buildMenuControls() {
     return window.DVIPPanelsUi.buildMenuControls({
       byId,
       state,
+      api,
+      controlValue,
+      clamp: clampSafe,
       sendControl,
       pickValues,
       isControlVisible: isRawControlVisible,

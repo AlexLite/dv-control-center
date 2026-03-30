@@ -10,6 +10,10 @@
     flex: '',
     pip: '',
   };
+  const runSettingsSaveTimers = {
+    flex: null,
+    pip: null,
+  };
 
   function byId(id) {
     return document.getElementById(id);
@@ -112,6 +116,21 @@
   function setStatus(panel, text) {
     const el = byId(panel.ids.status);
     if (el) el.textContent = text;
+  }
+
+  function readRunSettings(panel) {
+    return {
+      durationMs: Number(byId(panel.ids.duration)?.value || 1200),
+      fps: Number(byId(panel.ids.fps)?.value || 25),
+      easing: byId(panel.ids.easing)?.value || 'EaseEase',
+    };
+  }
+
+  function applyRunSettings(panel, settings) {
+    if (!settings || typeof settings !== 'object') return;
+    if (Number.isFinite(Number(settings.durationMs))) setInput(panel.ids.duration, Number(settings.durationMs), false);
+    if (Number.isFinite(Number(settings.fps))) setInput(panel.ids.fps, Number(settings.fps), false);
+    if (typeof settings.easing === 'string' && settings.easing) setInput(panel.ids.easing, settings.easing, false);
   }
 
   function readFlexUiState() {
@@ -300,6 +319,11 @@
   }
 
   function startLocalRun(panel, targetState, durationMs, easing) {
+    if (Number(durationMs) <= 0) {
+      applyStateToUi(panel.mode, targetState, true);
+      if (panel.mode === 'flex' && hooks?.state) hooks.state.mergeAnimating = false;
+      return;
+    }
     const from = readUiState(panel.mode);
     const start = performance.now();
 
@@ -368,8 +392,28 @@
 
   async function loadFromServer(panel) {
     const data = await hooks.api(`/api/merge/state?mode=${encodeURIComponent(panel.mode)}`);
+    applyRunSettings(panel, data.settings || null);
     renderPresetButtons(panel, data.presets || []);
     setStatus(panel, data.running ? 'Transition running...' : 'Merge Engine ready');
+  }
+
+  async function saveRunSettings(panel) {
+    const settings = readRunSettings(panel);
+    await hooks.api('/api/merge/settings', 'POST', {
+      mode: panel.mode,
+      durationMs: settings.durationMs,
+      fps: settings.fps,
+      easing: settings.easing,
+    });
+  }
+
+  function scheduleRunSettingsSave(panel) {
+    const mode = panel.mode === 'pip' ? 'pip' : 'flex';
+    if (runSettingsSaveTimers[mode]) clearTimeout(runSettingsSaveTimers[mode]);
+    runSettingsSaveTimers[mode] = setTimeout(() => {
+      runSettingsSaveTimers[mode] = null;
+      saveRunSettings(panel).catch(() => {});
+    }, 250);
   }
 
   async function savePreset(panel, opts = {}) {
@@ -428,9 +472,10 @@
   }
 
   async function runPreset(panel, name) {
-    const durationMs = Number(byId(panel.ids.duration)?.value || 1200);
-    const fps = Number(byId(panel.ids.fps)?.value || 25);
-    const easing = byId(panel.ids.easing)?.value || 'EaseEase';
+    const settings = readRunSettings(panel);
+    const durationMs = settings.durationMs;
+    const fps = settings.fps;
+    const easing = settings.easing;
     const target = presetMaps[panel.mode].get(name);
     selectedPresetByMode[panel.mode] = name;
     const nameInput = byId(panel.ids.presetName);
@@ -484,6 +529,11 @@
     byId(panel.ids.save)?.addEventListener('click', () => savePreset(panel));
     byId(panel.ids.apply)?.addEventListener('click', () => applyNow(panel));
     byId(panel.ids.stop)?.addEventListener('click', () => stopRun(panel));
+    byId(panel.ids.duration)?.addEventListener('change', () => scheduleRunSettingsSave(panel));
+    byId(panel.ids.fps)?.addEventListener('change', () => scheduleRunSettingsSave(panel));
+    byId(panel.ids.easing)?.addEventListener('change', () => scheduleRunSettingsSave(panel));
+    byId(panel.ids.duration)?.addEventListener('input', () => scheduleRunSettingsSave(panel));
+    byId(panel.ids.fps)?.addEventListener('input', () => scheduleRunSettingsSave(panel));
   }
 
   function init() {

@@ -9,16 +9,13 @@ function requireMaybe(filePath) {
 
 function loadProtocolSources() {
   const root = path.join(__dirname, '..');
-  const localBase = path.join(root, '..', 'companion-module-datavideo-dvip-master');
   const externalBase = path.join(root, 'docs', 'external');
 
-  const protocol3200 = requireMaybe(path.join(localBase, 'protocol_3200.js'))
-    || requireMaybe(path.join(externalBase, 'protocol_3200.js'));
-  const protocolCommon = requireMaybe(path.join(localBase, 'protocol_common.js'))
-    || requireMaybe(path.join(externalBase, 'protocol_common.js'));
+  const protocol3200 = requireMaybe(path.join(externalBase, 'protocol_3200.js'));
+  const protocolCommon = requireMaybe(path.join(externalBase, 'protocol_common.js'));
 
-  if (!protocol3200) throw new Error('protocol_3200.js not found in local or docs/external');
-  if (!protocolCommon) throw new Error('protocol_common.js not found in local or docs/external');
+  if (!protocol3200) throw new Error('protocol_3200.js not found in docs/external');
+  if (!protocolCommon) throw new Error('protocol_common.js not found in docs/external');
 
   return { protocol3200, protocolCommon };
 }

@@ -110,7 +110,7 @@
 
       'merge.toggle': 'Keys Bank / Merge',
       'merge.title': 'Merge Engine',
-      'merge.duration': 'Duration (ms)',
+      'merge.duration': 'Duration (ms, 0 = instant)',
       'merge.rate': 'Update Rate (Hz)',
       'merge.speedMode': 'Speed Mode',
       'merge.linear': 'Linear',
@@ -301,7 +301,7 @@
 
       'merge.toggle': 'Keys Bank / Merge',
       'merge.title': 'Merge Engine',
-      'merge.duration': 'Длительность (ms)',
+      'merge.duration': 'Длительность (ms, 0 = мгновенно)',
       'merge.rate': 'Частота обновления (Hz)',
       'merge.speedMode': 'Режим скорости',
       'merge.linear': 'Linear',

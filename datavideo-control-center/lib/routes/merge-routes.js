@@ -17,18 +17,23 @@ function resolveMode(req, body = null) {
 function readRunOptionsFromQuery(req) {
   try {
     const url = new URL(req.url, 'http://localhost');
-    const durationMs = Number(url.searchParams.get('durationMs'));
-    const fps = Number(url.searchParams.get('fps'));
-    const easing = url.searchParams.get('easing');
+    const durationRaw = url.searchParams.get('durationMs');
+    const fpsRaw = url.searchParams.get('fps');
+    const easingRaw = url.searchParams.get('easing');
+    const debugTrace = url.searchParams.get('debugTrace');
     const preset = url.searchParams.get('preset');
+    const durationMs = durationRaw === null ? undefined : Number(durationRaw);
+    const fps = fpsRaw === null ? undefined : Number(fpsRaw);
+    const easing = easingRaw === null ? undefined : String(easingRaw);
     return {
       preset: preset ? String(preset) : null,
       durationMs: Number.isFinite(durationMs) ? durationMs : undefined,
       fps: Number.isFinite(fps) ? fps : undefined,
-      easing: easing ? String(easing) : undefined,
+      easing,
+      debugTrace: debugTrace !== null ? debugTrace : undefined,
     };
   } catch (_) {
-    return { preset: null, durationMs: undefined, fps: undefined, easing: undefined };
+    return { preset: null, durationMs: undefined, fps: undefined, easing: undefined, debugTrace: undefined };
   }
 }
 
@@ -54,6 +59,18 @@ async function handleMergeApiRoute(ctx) {
     return true;
   }
 
+  if (req.method === 'POST' && pathname === '/api/merge/settings') {
+    const body = await readBody(req);
+    const mode = resolveMode(req, body);
+    const settings = mergeEngine.updateRunSettings(mode, {
+      durationMs: body.durationMs,
+      fps: body.fps,
+      easing: body.easing,
+    });
+    json(res, 200, { ok: true, mode, settings });
+    return true;
+  }
+
   // Simple query-based run endpoint for generic clients (Companion HTTP GET):
   // /api/merge/run?preset=Key1&mode=flex&durationMs=1200&fps=15&easing=EaseEase
   if (req.method === 'GET' && pathname === '/api/merge/run') {
@@ -63,6 +80,7 @@ async function handleMergeApiRoute(ctx) {
       durationMs: queryRun.durationMs,
       fps: queryRun.fps,
       easing: queryRun.easing,
+      debugTrace: queryRun.debugTrace,
     };
     if (queryRun.preset) {
       const run = mergeEngine.runToPreset(queryRun.preset, options, mode);
@@ -84,6 +102,7 @@ async function handleMergeApiRoute(ctx) {
       durationMs: queryRun.durationMs,
       fps: queryRun.fps,
       easing: queryRun.easing,
+      debugTrace: queryRun.debugTrace,
     };
     const rawName = pathname.slice('/api/merge/run/'.length);
     const presetName = decodeURIComponent(String(rawName || '')).trim();
@@ -105,6 +124,7 @@ async function handleMergeApiRoute(ctx) {
       durationMs: queryRun.durationMs,
       fps: queryRun.fps,
       easing: queryRun.easing,
+      debugTrace: queryRun.debugTrace,
     };
     const run = mergeEngine.runToPreset(presetName, options, mode);
     json(res, 200, { ok: true, preset: presetName, run });
@@ -143,6 +163,7 @@ async function handleMergeApiRoute(ctx) {
       durationMs: body.durationMs,
       fps: body.fps,
       easing: body.easing,
+      debugTrace: body.debugTrace,
     };
     if (body.preset) {
       const run = mergeEngine.runToPreset(body.preset, options, mode);

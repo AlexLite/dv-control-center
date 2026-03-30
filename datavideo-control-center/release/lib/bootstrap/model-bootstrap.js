@@ -1,6 +1,31 @@
-const protocol3200 = require('../../../companion-module-datavideo-dvip-master/protocol_3200');
-const protocolCommon = require('../../../companion-module-datavideo-dvip-master/protocol_common');
-const choices = require('../../../companion-module-datavideo-dvip-master/choices');
+const fs = require('fs');
+const path = require('path');
+
+function loadCompanionAsset(fileName) {
+  const candidates = [
+    path.resolve(__dirname, '../../docs/external', fileName),
+    path.resolve(process.cwd(), 'docs', 'external', fileName),
+  ];
+
+  const loadErrors = [];
+  for (const candidate of candidates) {
+    if (!fs.existsSync(candidate)) continue;
+    try {
+      return require(candidate);
+    } catch (err) {
+      loadErrors.push(`${candidate}: ${err.message}`);
+    }
+  }
+
+  const message = loadErrors.length
+    ? `Cannot load ${fileName}. Tried: ${candidates.join(', ')}. Errors: ${loadErrors.join(' | ')}`
+    : `Cannot load ${fileName}. Tried: ${candidates.join(', ')}`;
+  throw new Error(message);
+}
+
+const protocol3200 = loadCompanionAsset('protocol_3200.js');
+const protocolCommon = loadCompanionAsset('protocol_common.js');
+const choices = loadCompanionAsset('choices.js');
 
 const { detectModelFromState } = require('../model-detect');
 const {

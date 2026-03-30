@@ -120,7 +120,7 @@
           <div id="pipMergePanel" class="card hidden-panel">
             <h2 data-i18n="merge.title">Merge Engine</h2>
             <div class="grid merge-config-grid">
-              <label><span data-i18n="merge.duration">Duration (ms)</span> <input id="pipMergeDuration" type="number" min="100" max="120000" step="100" value="1200"></label>
+              <label><span data-i18n="merge.duration">Duration (ms, 0 = instant)</span> <input id="pipMergeDuration" type="number" min="0" max="120000" step="100" value="1200"></label>
               <label><span data-i18n="merge.rate">Update Rate (Hz)</span> <input id="pipMergeFps" type="number" min="2" max="50" step="1" value="25"></label>
               <label><span data-i18n="merge.speedMode">Speed Mode</span>
                 <select id="pipMergeEasing">
@@ -191,7 +191,7 @@
           <div id="flexMergePanel" class="card hidden-panel">
             <h2 data-i18n="merge.title">Merge Engine</h2>
             <div class="grid merge-config-grid">
-              <label><span data-i18n="merge.duration">Duration (ms)</span> <input id="mergeDuration" type="number" min="100" max="120000" step="100" value="1200"></label>
+              <label><span data-i18n="merge.duration">Duration (ms, 0 = instant)</span> <input id="mergeDuration" type="number" min="0" max="120000" step="100" value="1200"></label>
               <label><span data-i18n="merge.rate">Update Rate (Hz)</span> <input id="mergeFps" type="number" min="2" max="50" step="1" value="25"></label>
               <label><span data-i18n="merge.speedMode">Speed Mode</span>
                 <select id="mergeEasing">
@@ -355,6 +355,7 @@
   <script src="./canvas-geometry.js"></script>
   <script src="./ui-geometry.js"></script>
   <script src="./language/translations.js"></script>
+  <script src="./ui-settings.js"></script>
   <script src="./language/i18n.js"></script>
   <script src="./constants.js"></script>
   <script src="./app-state.js"></script>

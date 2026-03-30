@@ -57,7 +57,7 @@
 
     exposeHooks();
     initEditorDefaults(state);
-    loadFlexEditorState();
+    await Promise.resolve(loadFlexEditorState());
     initNumberWheelNudge();
     initSliderWheelNudge();
     initTabs();
@@ -85,7 +85,7 @@
     buildFlex();
     buildMemoryControls();
     buildFlexWindowControls();
-    initFlexBanks();
+    await Promise.resolve(initFlexBanks());
     buildRawControls();
     buildMenuControls();
     enablePipMouse();

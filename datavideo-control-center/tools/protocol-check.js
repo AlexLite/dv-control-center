@@ -2,9 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 function loadProtocol() {
-  const localModule = path.join(__dirname, '..', '..', 'companion-module-datavideo-dvip-master', 'protocol_3200.js');
   const externalCopy = path.join(__dirname, '..', 'docs', 'external', 'protocol_3200.js');
-  const target = fs.existsSync(localModule) ? localModule : externalCopy;
+  const target = externalCopy;
+  if (!fs.existsSync(target)) {
+    throw new Error(`protocol_3200.js not found at ${target}`);
+  }
   // eslint-disable-next-line import/no-dynamic-require, global-require
   const mod = require(target);
   return { target, mod };

@@ -50,6 +50,11 @@
       if (byId(`pip${i}-borderOn`)) byId(`pip${i}-borderOn`).checked = (w.borderOn !== undefined) ? !!w.borderOn : Number(w.bs ?? 1) > 0;
       const sr = byId(`pip${i}-s-r`);
       if (sr) sr.value = String(Math.round(Number(w.s ?? 0)));
+      // Keep hidden raw scale in sync with restored percent scale.
+      // drawPipCanvas() calls normalizePipAspect(), which derives s from pipN-w.
+      const rawScale = Number(w.s ?? 0) / 100;
+      if (byId(`pip${i}-w`)) byId(`pip${i}-w`).value = rawScale.toFixed(4);
+      if (byId(`pip${i}-h`)) byId(`pip${i}-h`).value = rawScale.toFixed(4);
       updatePipBorderUi(i);
     }
     normalizePipAspect();
@@ -100,6 +105,11 @@
       if (byId(`flex${i}-borderOn`)) byId(`flex${i}-borderOn`).checked = !!w.borderOn;
       const sr = byId(`flex${i}-s-r`);
       if (sr) sr.value = String(Math.round(Number(w.s ?? 0)));
+      // Keep hidden raw scale in sync with restored percent scale.
+      // drawFlexCanvas() calls normalizeFlexAspect(), which derives s from flexN-w.
+      const rawScale = Number(w.s ?? 0) / 100;
+      if (byId(`flex${i}-w`)) byId(`flex${i}-w`).value = rawScale.toFixed(4);
+      if (byId(`flex${i}-h`)) byId(`flex${i}-h`).value = rawScale.toFixed(4);
     }
     normalizeFlexAspect();
     drawFlexCanvas();

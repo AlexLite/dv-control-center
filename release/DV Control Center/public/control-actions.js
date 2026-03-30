@@ -3,10 +3,25 @@
   function saveFlexBanksState(deps) {
     const { state } = deps;
     localStorage.setItem('datavideo_flex_banks', JSON.stringify(state.flexBanks || {}));
+    if (global.DVCCUiSettings && typeof global.DVCCUiSettings.saveFlexBanks === 'function') {
+      global.DVCCUiSettings.saveFlexBanks(state.flexBanks || {}).catch(() => {});
+    }
   }
 
-  function loadFlexBanksState(deps) {
+  async function loadFlexBanksState(deps) {
     const { state } = deps;
+    let loaded = null;
+    try {
+      if (global.DVCCUiSettings && typeof global.DVCCUiSettings.getFlexBanks === 'function') {
+        loaded = await global.DVCCUiSettings.getFlexBanks();
+      }
+    } catch (_) {
+      loaded = null;
+    }
+    if (loaded && typeof loaded === 'object' && Object.keys(loaded).length > 0) {
+      state.flexBanks = loaded;
+      return;
+    }
     try {
       const raw = localStorage.getItem('datavideo_flex_banks') || localStorage.getItem('se3200_flex_banks');
       if (!raw) return;
@@ -98,9 +113,9 @@
     drawFlexCanvas();
   }
 
-  function initFlexBanks(deps) {
+  async function initFlexBanks(deps) {
     const { state, byId } = deps;
-    loadFlexBanksState(deps);
+    await loadFlexBanksState(deps);
     if (!state.flexBanks[1]) state.flexBanks[1] = makeDefaultFlexBankState(deps);
     if (!state.flexBanks[2]) state.flexBanks[2] = makeDefaultFlexBankState(deps);
     state.activeFlexBank = Number(state.activeFlexBank) || 1;

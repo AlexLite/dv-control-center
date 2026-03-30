@@ -2,7 +2,7 @@
 
 ## Project
 - Main working project: `C:\Users\pikul\Desktop\dev\DataVideo Control Center\datavideo-control-center`
-- Companion source used for protocol/choices reference: `C:\Users\pikul\Desktop\dev\DataVideo Control Center\companion-module-datavideo-dvip-master`
+- Protocol/choices runtime source: `docs/external` inside the project/release folder
 
 ## What was completed
 

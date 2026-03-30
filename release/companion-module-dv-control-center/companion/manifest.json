@@ -1,31 +1,31 @@
 {
-    "id":  "dv-control-center",
-    "name":  "dv-control-center",
-    "shortname":  "dvcc",
-    "description":  "DV Control Center",
-    "version":  "1.0.0",
-    "license":  "MIT",
-    "repository":  "git+https://github.com/bitfocus/companion-module-datavideo-dvip.git",
-    "bugs":  "https://github.com/bitfocus/companion-module-datavideo-dvip/issues",
-    "maintainers":  [
-                        {
-                            "name":  "Rose O"
-                        }
-                    ],
-    "legacyIds":  [
-
-                  ],
-    "runtime":  {
-                    "type":  "node18",
-                    "api":  "nodejs-ipc",
-                    "apiVersion":  "1.11.2",
-                    "entrypoint":  "../index.js"
-                },
-    "manufacturer":  "DataVideo",
-    "products":  [
-                     "DV Control Center"
-                 ],
-    "keywords":  [
-                     "Vision Mixer"
-                 ]
+    "id": "dv-control-center",
+    "name": "dv-control-center",
+    "shortname": "dvcc",
+    "description": "DV Control Center (merge presets)",
+    "version": "1.0.0",
+    "license": "MIT",
+    "repository": "https://local.invalid/dv-control-center",
+    "bugs": "https://local.invalid/dv-control-center/issues",
+    "maintainers": [
+        {
+            "name": "Rose O"
+        }
+    ],
+    "legacyIds": [],
+    "runtime": {
+        "type": "node18",
+        "api": "nodejs-ipc",
+        "apiVersion": "1.11.2",
+        "entrypoint": "../index.js"
+    },
+    "manufacturer": "DataVideo",
+    "products": [
+        "DV Control Center"
+    ],
+    "keywords": [
+        "DVCC",
+        "Merge",
+        "Presets"
+    ]
 }

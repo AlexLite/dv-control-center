@@ -25,9 +25,11 @@ async function handleSystemRoute(ctx) {
     req,
     res,
     pathname,
+    readBody,
     json,
     client,
     publicDir,
+    uiSettingsStore,
   } = ctx;
 
   if (req.method === 'GET' && pathname === '/api/events') {
@@ -39,6 +41,18 @@ async function handleSystemRoute(ctx) {
     });
     client.addSseClient(res);
     req.on('close', () => client.removeSseClient(res));
+    return true;
+  }
+
+  if (req.method === 'GET' && pathname === '/api/ui/settings') {
+    json(res, 200, uiSettingsStore ? uiSettingsStore.getAll() : {});
+    return true;
+  }
+
+  if (req.method === 'POST' && pathname === '/api/ui/settings') {
+    const body = await readBody(req);
+    const saved = uiSettingsStore ? uiSettingsStore.mergePatch(body || {}) : {};
+    json(res, 200, { ok: true, settings: saved });
     return true;
   }
 

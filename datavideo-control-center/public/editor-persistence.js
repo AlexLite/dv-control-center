@@ -1,34 +1,43 @@
 /* global window, document, Blob, URL */
 (function initEditorPersistence(global) {
-  function loadFlexEditorState(deps) {
+  async function loadFlexEditorState(deps) {
     const { state } = deps
+    let saved = null
     try {
-      const raw = localStorage.getItem('datavideo_flex_editor') || localStorage.getItem('se3200_flex_editor')
-      if (!raw) return
-      const saved = JSON.parse(raw)
-      if (saved && typeof saved === 'object') {
-        state.flexView = Number(saved.flexView) || 2
-        state.flexGridDensity = Number(saved.flexGridDensity) || 24
-        state.flexShowGuides = saved.flexShowGuides !== false
-        state.flexSafeMargins = !!saved.flexSafeMargins
-        state.flexSnapEnabled = saved.flexSnapEnabled !== false
-        state.flexSnapDistance = Number(saved.flexSnapDistance) || 10
-        state.flexGuides = {
-          v: Array.isArray(saved.flexGuides?.v) ? saved.flexGuides.v : [],
-          h: Array.isArray(saved.flexGuides?.h) ? saved.flexGuides.h : [],
-        }
-        state.pipGridDensity = Number(saved.pipGridDensity) || 24
-        state.pipShowGuides = saved.pipShowGuides !== false
-        state.pipSafeMargins = !!saved.pipSafeMargins
-        state.pipSnapEnabled = saved.pipSnapEnabled !== false
-        state.pipSnapDistance = Number(saved.pipSnapDistance) || 10
-        state.pipGuides = {
-          v: Array.isArray(saved.pipGuides?.v) ? saved.pipGuides.v : [],
-          h: Array.isArray(saved.pipGuides?.h) ? saved.pipGuides.h : [],
-        }
+      if (global.DVCCUiSettings && typeof global.DVCCUiSettings.getEditorSettings === 'function') {
+        saved = await global.DVCCUiSettings.getEditorSettings()
       }
     } catch (e) {
-      // ignore broken local storage values
+      // ignore backend errors and try local fallback
+    }
+    if (!saved || typeof saved !== 'object' || Object.keys(saved).length < 1) {
+      try {
+        const raw = localStorage.getItem('datavideo_flex_editor') || localStorage.getItem('se3200_flex_editor')
+        if (raw) saved = JSON.parse(raw)
+      } catch (_) {
+        saved = null
+      }
+    }
+    if (saved && typeof saved === 'object') {
+      state.flexView = Number(saved.flexView) || 2
+      state.flexGridDensity = Number(saved.flexGridDensity) || 24
+      state.flexShowGuides = saved.flexShowGuides !== false
+      state.flexSafeMargins = !!saved.flexSafeMargins
+      state.flexSnapEnabled = saved.flexSnapEnabled !== false
+      state.flexSnapDistance = Number(saved.flexSnapDistance) || 10
+      state.flexGuides = {
+        v: Array.isArray(saved.flexGuides?.v) ? saved.flexGuides.v : [],
+        h: Array.isArray(saved.flexGuides?.h) ? saved.flexGuides.h : [],
+      }
+      state.pipGridDensity = Number(saved.pipGridDensity) || 24
+      state.pipShowGuides = saved.pipShowGuides !== false
+      state.pipSafeMargins = !!saved.pipSafeMargins
+      state.pipSnapEnabled = saved.pipSnapEnabled !== false
+      state.pipSnapDistance = Number(saved.pipSnapDistance) || 10
+      state.pipGuides = {
+        v: Array.isArray(saved.pipGuides?.v) ? saved.pipGuides.v : [],
+        h: Array.isArray(saved.pipGuides?.h) ? saved.pipGuides.h : [],
+      }
     }
   }
 
@@ -50,6 +59,9 @@
       pipGuides: state.pipGuides,
     }
     localStorage.setItem('datavideo_flex_editor', JSON.stringify(payload))
+    if (global.DVCCUiSettings && typeof global.DVCCUiSettings.saveEditorSettings === 'function') {
+      global.DVCCUiSettings.saveEditorSettings(payload).catch(() => {})
+    }
   }
 
   function normalizeGuidesPayload(parsed) {

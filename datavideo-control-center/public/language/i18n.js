@@ -40,8 +40,28 @@
     if (state.language === lang) return;
     state.language = lang;
     localStorage.setItem(STORAGE_KEY, lang);
+    if (global.DVCCUiSettings && typeof global.DVCCUiSettings.saveLanguage === 'function') {
+      global.DVCCUiSettings.saveLanguage(lang).catch(() => {});
+    }
     applyStaticTranslations();
     document.dispatchEvent(new CustomEvent('dvcc:lang-changed', { detail: { lang } }));
+  }
+
+  async function syncLanguageFromBackend() {
+    try {
+      if (!global.DVCCUiSettings || typeof global.DVCCUiSettings.getLanguage !== 'function') return;
+      const remote = await global.DVCCUiSettings.getLanguage();
+      if (remote === 'en' || remote === 'ru') {
+        state.language = remote;
+        localStorage.setItem(STORAGE_KEY, remote);
+      } else {
+        global.DVCCUiSettings.saveLanguage(state.language).catch(() => {});
+      }
+      applyStaticTranslations();
+      document.dispatchEvent(new CustomEvent('dvcc:lang-changed', { detail: { lang: state.language } }));
+    } catch (_) {
+      // ignore backend sync errors
+    }
   }
 
   function bindLanguageSelect() {
@@ -54,6 +74,7 @@
   function init() {
     applyStaticTranslations();
     bindLanguageSelect();
+    syncLanguageFromBackend().catch(() => {});
   }
 
   if (document.readyState === 'loading') {

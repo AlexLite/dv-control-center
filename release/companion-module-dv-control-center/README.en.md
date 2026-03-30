@@ -1,44 +1,32 @@
-﻿## Companion DV Control Center Module
+## Companion DV Control Center Module (DVCC-only)
 
-English documentation for the custom Companion module.
+This module now provides only DV Control Center integration.
+All legacy DVIP switcher controls/actions/feedbacks are removed.
 
-This module is designed to run alongside legacy `datavideo-dvip` without breaking legacy behavior.
+## Available
 
-## Scope
-
-- Keeps standard DataVideo DVIP control/actions from the base module
-- Adds DV Control Center merge integration
-
-### Added DVCC Integration
-
-- Action: run merge key by name (`dvcc_merge_run_named`)
-- Feedback: active merge preset (`dvcc_merge_active`)
+- Action: `dvcc_merge_run_named`
+- Feedbacks: `dvcc_merge_active`, `dvcc_merge_active_flex`, `dvcc_merge_active_pip`
 - Variables:
   - `dvcc_merge_active_flex`
   - `dvcc_merge_running_flex`
   - `dvcc_merge_active_pip`
   - `dvcc_merge_running_pip`
 
-Module polls DVCC state from:
+## API used
 
-- `/api/merge/state?mode=flex`
-- `/api/merge/state?mode=pip`
+- `GET /api/merge/state?mode=flex`
+- `GET /api/merge/state?mode=pip`
+- `GET|POST /api/merge/run/<preset>?mode=flex|pip`
 
-Default DVCC URL: `http://127.0.0.1:9999` (configurable in module settings).
+The module does not send `duration/fps/easing` and relies on DVCC saved settings.
+
+## Default
+
+- DVCC base URL: `http://127.0.0.1:9999`
 
 ## Install
 
-1. Copy module folder into Companion custom modules directory.
+1. Copy the module folder into Companion custom modules directory.
 2. Restart Companion.
-3. Add module instance in Companion UI.
-4. Set switcher connection fields and DVCC Base URL in config.
-
-## Usage
-
-- Use action `RUN (name)` to run a saved DVCC merge preset.
-- Use feedback `DVCC Merge Key Active` for button color/state.
-
-## Notes
-
-- If the module is replaced manually, Companion restart is required.
-- Active feedback depends on DVCC reported active state and preset matching.
+3. Remove and re-add module instance to refresh action/feedback schema.
