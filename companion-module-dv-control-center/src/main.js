@@ -12,6 +12,30 @@ function normalizeMode(mode) {
   return String(mode || '').toLowerCase() === 'pip' ? 'pip' : 'flex'
 }
 
+function normalizeComparableName(input) {
+  // Handle common Cyrillic/Latin lookalike letters used in key names.
+  const map = {
+    А: 'A', а: 'a',
+    В: 'B', в: 'b',
+    Е: 'E', е: 'e',
+    К: 'K', к: 'k',
+    М: 'M', м: 'm',
+    Н: 'H', н: 'h',
+    О: 'O', о: 'o',
+    Р: 'P', р: 'p',
+    С: 'C', с: 'c',
+    Т: 'T', т: 't',
+    Х: 'X', х: 'x',
+    У: 'Y', у: 'y',
+  }
+  return String(input || '')
+    .trim()
+    .split('')
+    .map((ch) => (map[ch] !== undefined ? map[ch] : ch))
+    .join('')
+    .toLowerCase()
+}
+
 function nearlyEqual(a, b, eps = 0.05) {
   return Math.abs((Number(a) || 0) - (Number(b) || 0)) <= eps
 }
@@ -153,11 +177,31 @@ class DvccMergeInstance extends InstanceBase {
 
   async runNamedMergeKey(options) {
     const mode = normalizeMode(options.mode)
-    const keyName = String(options.key_name || '').trim()
-    if (!keyName) {
+    const keyNameRaw = String(options.key_name || '').trim()
+    if (!keyNameRaw) {
       this.log('warn', 'DVCC merge run skipped: empty key name')
       return
     }
+    let keyName = keyNameRaw
+
+    // Resolve confusable key names by checking existing preset names.
+    try {
+      const state = await this.requestJson(`/api/merge/state?mode=${encodeURIComponent(mode)}`)
+      const presets = Array.isArray(state?.presets) ? state.presets : []
+      const exact = presets.find((p) => String(p?.name || '') === keyNameRaw)
+      if (exact?.name) {
+        keyName = String(exact.name)
+      } else {
+        const target = normalizeComparableName(keyNameRaw)
+        const matches = presets
+          .map((p) => String(p?.name || ''))
+          .filter((name) => normalizeComparableName(name) === target)
+        if (matches.length === 1) keyName = matches[0]
+      }
+    } catch (_) {
+      // Non-fatal: fallback to user input and let backend validate.
+    }
+
     await this.requestJson('/api/merge/run', {
       method: 'POST',
       body: {

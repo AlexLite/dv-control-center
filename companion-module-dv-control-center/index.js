@@ -25049,6 +25049,35 @@ function normalizeBaseUrl(input) {
 function normalizeMode(mode) {
   return String(mode || "").toLowerCase() === "pip" ? "pip" : "flex";
 }
+function normalizeComparableName(input) {
+  const map = {
+    \u0410: "A",
+    \u0430: "a",
+    \u0412: "B",
+    \u0432: "b",
+    \u0415: "E",
+    \u0435: "e",
+    \u041A: "K",
+    \u043A: "k",
+    \u041C: "M",
+    \u043C: "m",
+    \u041D: "H",
+    \u043D: "h",
+    \u041E: "O",
+    \u043E: "o",
+    \u0420: "P",
+    \u0440: "p",
+    \u0421: "C",
+    \u0441: "c",
+    \u0422: "T",
+    \u0442: "t",
+    \u0425: "X",
+    \u0445: "x",
+    \u0423: "Y",
+    \u0443: "y"
+  };
+  return String(input || "").trim().split("").map((ch) => map[ch] !== void 0 ? map[ch] : ch).join("").toLowerCase();
+}
 function nearlyEqual(a, b, eps = 0.05) {
   return Math.abs((Number(a) || 0) - (Number(b) || 0)) <= eps;
 }
@@ -25161,10 +25190,24 @@ var DvccMergeInstance = class extends InstanceBase {
   }
   async runNamedMergeKey(options) {
     const mode = normalizeMode(options.mode);
-    const keyName = String(options.key_name || "").trim();
-    if (!keyName) {
+    const keyNameRaw = String(options.key_name || "").trim();
+    if (!keyNameRaw) {
       this.log("warn", "DVCC merge run skipped: empty key name");
       return;
+    }
+    let keyName = keyNameRaw;
+    try {
+      const state = await this.requestJson(`/api/merge/state?mode=${encodeURIComponent(mode)}`);
+      const presets = Array.isArray(state?.presets) ? state.presets : [];
+      const exact = presets.find((p) => String(p?.name || "") === keyNameRaw);
+      if (exact?.name) {
+        keyName = String(exact.name);
+      } else {
+        const target = normalizeComparableName(keyNameRaw);
+        const matches = presets.map((p) => String(p?.name || "")).filter((name) => normalizeComparableName(name) === target);
+        if (matches.length === 1) keyName = matches[0];
+      }
+    } catch (_) {
     }
     await this.requestJson("/api/merge/run", {
       method: "POST",
