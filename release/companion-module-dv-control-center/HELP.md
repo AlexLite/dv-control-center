@@ -1,21 +1,18 @@
 ## DV Control Center Module (DVCC-only)
 
-This custom Companion module is dedicated to DV Control Center merge presets.
+This Companion module controls DVCC Merge presets only (no mixer TCP connection).
 
 Available action:
 - `dvcc_merge_run_named`
 
-Available feedbacks:
+Available feedback:
 - `dvcc_merge_active`
-- `dvcc_merge_active_flex`
-- `dvcc_merge_active_pip`
 
 Available variables:
-- `dvcc_merge_active_flex`
-- `dvcc_merge_running_flex`
-- `dvcc_merge_active_pip`
-- `dvcc_merge_running_pip`
+- `$(dvcc:active_flex)`
+- `$(dvcc:active_pip)`
 
-Default DVCC URL: `http://127.0.0.1:9999`
+Required setting:
+- `DVCC API Base URL` (default `http://127.0.0.1:9999`)
 
-Note: after updating this module, restart Companion and re-add module instance.
+After updating module files, restart Companion and re-add the module instance.
