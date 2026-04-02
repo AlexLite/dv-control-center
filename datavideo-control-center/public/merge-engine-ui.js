@@ -536,9 +536,25 @@
     byId(panel.ids.fps)?.addEventListener('input', () => scheduleRunSettingsSave(panel));
   }
 
+  function bindPanelToggle(buttonId, panelId) {
+    const button = byId(buttonId);
+    const panel = byId(panelId);
+    if (!button || !panel) return;
+    if (button.dataset.mergeToggleBound === '1') return;
+    button.dataset.mergeToggleBound = '1';
+    button.addEventListener('click', () => {
+      panel.classList.toggle('hidden-panel');
+    });
+  }
+
   function init() {
     const panels = getPanels();
     if (!panels.length) return;
+
+    // Fallback binding: if base panel UI didn't attach toggle handlers,
+    // keep Merge panels operable from this module.
+    bindPanelToggle('flexMergeToggle', 'flexMergePanel');
+    bindPanelToggle('pipMergeToggle', 'pipMergePanel');
 
     if (hooks?.state) hooks.state.mergeAnimating = false;
 
